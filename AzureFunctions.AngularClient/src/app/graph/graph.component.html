@@ -1,0 +1,6 @@
+<div>
+  <div style="display: block;">
+    <busy-state [name]="full ? 'graph-full' : 'graph'"></busy-state>
+    <nvd3 [options]="options" [data]="_data" style="width:100% !important"></nvd3>
+  </div>
+</div>

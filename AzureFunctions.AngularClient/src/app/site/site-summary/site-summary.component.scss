@@ -25,7 +25,7 @@
     >span{
         padding: 12px;
         display: inline-block;
-        
+
         &:hover{
             background-color: $chrome-color;
         }
@@ -69,6 +69,7 @@
 }
 
 #site-summary-body{
+    border-bottom: 1px #d8e1e6 solid;
     padding: 10px 35px;
 }
 

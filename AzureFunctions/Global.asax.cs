@@ -88,7 +88,8 @@ namespace AzureFunctions
                 return;
             }
 
-            var isFile = FileSystemHelpers.FileExists(HostingEnvironment.MapPath($"~{context.Request.Url.AbsolutePath.Replace('/', '\\')}"));
+            var filePath = Path.Combine(HostingEnvironment.MapPath("~"), context.Request.Url.AbsolutePath.Replace('/', '\\'));
+            var isFile = FileSystemHelpers.FileExists(filePath);
             var route = RouteTable.Routes.GetRouteData(context);
             // If the route is not registerd in the WebAPI RouteTable
             //      then it's not an API route, which means it's a resource (*.js, *.css, *.cshtml), not authenticated.
@@ -227,6 +228,10 @@ namespace AzureFunctions
             builder.RegisterType<PassThroughRequestManager>()
                 .As<IPassThroughRequestManager>()
                 .InstancePerRequest();
+
+            builder.RegisterType<StorageManager>()
+                .As<IStorageManager>()
+                .InstancePerRequest();
         }
 
         private void RegisterRoutes(HttpConfiguration config)
@@ -248,6 +253,10 @@ namespace AzureFunctions
             config.Routes.MapHttpRoute("diagnose-app", "api/diagnose/{*armId}", new { controller = "AzureFunctions", action = "Diagnose", authenticated = false }, new { verb = new HttpMethodConstraint(HttpMethod.Post.ToString()) });
 
             config.Routes.MapHttpRoute("passthrough", "api/passthrough", new { controller = "AzureFunctions", action = "PassThrough", authrnticated = true }, new { verb = new HttpMethodConstraint(HttpMethod.Post.ToString()) });
+
+            config.Routes.MapHttpRoute("get-ux-settings", "api/uxsettings/{*id}", new { controller = "UxSettings", action = "GetUxSettings", authenticated = true }, new { verb = new HttpMethodConstraint(HttpMethod.Get.ToString()) });
+            config.Routes.MapHttpRoute("add-or-update-graph", "api/uxsettings/graphs/{*id}", new { controller = "UxSettings", action = "AddOrUpdateGraph", authenticated = true }, new { verb = new HttpMethodConstraint(HttpMethod.Put.ToString()) });
+            config.Routes.MapHttpRoute("delete-graph", "api/uxsettings/graphs/{queryId}/{*id}", new { controller = "UxSettings", action = "DeleteGraph", authenticated = true }, new { verb = new HttpMethodConstraint(HttpMethod.Delete.ToString()) });
         }
     }
 }

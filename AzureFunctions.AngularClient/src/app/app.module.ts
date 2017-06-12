@@ -1,3 +1,5 @@
+import { UxSettingsService } from './shared/services/ux-settings.service';
+import { GraphComponent } from './graph/graph.component';
 import { CreateAppComponent } from './site/create-app/create-app.component';
 import { ClickToEditComponent } from './controls/click-to-edit/click-to-edit.component';
 import { AiTryService } from './shared/services/ai-try.service';
@@ -108,6 +110,8 @@ import { SlotsListComponent } from './slots-list/slots-list.component';
 import { SlotsService } from './shared/services/slots.service';
 import { SlotNewComponent } from './slot-new/slot-new.component';
 import { SearchBoxComponent } from './search-box/search-box.component';
+import { AppInsightsGraphsComponent } from './app-insights-graphs/app-insights-graphs.component';
+import { NvD3Component } from 'ng2-nvd3';
 
 export function ArmServiceFactory(
     http: Http,
@@ -209,8 +213,11 @@ export class AppModule {
     CreateAppComponent,
     SlotsListComponent,
     SlotNewComponent,
-	EventHubComponent,
-	SearchBoxComponent
+    EventHubComponent,
+    SearchBoxComponent,
+    AppInsightsGraphsComponent,
+    GraphComponent,
+    NvD3Component
   ],
   imports: [
     FormsModule,
@@ -248,6 +255,7 @@ export class AppModule {
     GlobalStateService,
     { provide: AiService, useFactory: AiServiceFactory },
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
+    UxSettingsService
   ],
   bootstrap: [AppComponent]
 };

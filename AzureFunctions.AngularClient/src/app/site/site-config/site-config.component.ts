@@ -33,6 +33,7 @@ export class SiteConfigComponent implements OnInit {
   public viewInfoStream: Subject<TreeViewInfo>;
 
   public mainForm: FormGroup;
+  public showForm: boolean = false;
   public connectionStringTypes: DropDownElement<ConnectionStringType>[];
   public Resources = PortalResources;
 
@@ -96,6 +97,7 @@ export class SiteConfigComponent implements OnInit {
   }
 
   private _setupForm(appSettingsArm: ArmObj<any>, connectionStringsArm: ArmObj<ConnectionStrings>, webConfigArm: ArmObj<SiteConfig>){
+      this.showForm = false;
       let appSettings = this._fb.array([]);
       let connectionStrings = this._fb.array([]);
       let generalSettings = this._fb.group({});
@@ -170,6 +172,8 @@ export class SiteConfigComponent implements OnInit {
         connectionStrings: connectionStrings,
         generalSettings: generalSettings
       });
+
+      this.showForm = true;
   }
 
   private _getConnectionStringTypes(defaultType: ConnectionStringType){

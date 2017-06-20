@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { FormBuilder, FormArray, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -19,23 +19,25 @@ import { CacheService } from './../../../shared/services/cache.service';
 import { TreeViewInfo } from './../../../tree-view/models/tree-view-info';
 import { UniqueValidator } from 'app/shared/validators/uniqueValidator';
 import { RequiredValidator } from 'app/shared/validators/requiredValidator';
-import { SiteConfig } from 'app/shared/models/arm/site-config';
-import { AvailableStackNames, Version } from 'app/shared/models/constants';
-import { AvailableStack, MinorVersion, MajorVersion, Framework } from 'app/shared/models/arm/stacks';
-import { StacksHelper } from './../../../shared/Utilities/stacks.helper';
 
 @Component({
   selector: 'app-settings',
   templateUrl: './app-settings.component.html',
   styleUrls: ['./app-settings.component.scss']
 })
-export class AppSettingsComponent implements OnInit {
+export class AppSettingsComponent implements OnInit, OnChanges {
   public Resources = PortalResources;
   public groupArray: FormArray;
 
+  public mainFormStream: Subject<FormGroup>;
+  public resourceIdStream: Subject<string>;
+  private _subscription: RxSubscription;
+
   private _appSettingsArm: ArmObj<any>;
   private _busyState: BusyStateComponent;
+
   private _resourceId: string;
+  private _mainForm: FormGroup;
 
   private _requiredValidator: RequiredValidator;
   private _uniqueAppSettingValidator: UniqueValidator;
@@ -47,7 +49,34 @@ export class AppSettingsComponent implements OnInit {
     private _aiService: AiService,
     tabsComponent: TabsComponent
     ) {
-      //this._busyState = tabsComponent.busyState;
+      this._busyState = tabsComponent.busyState;
+
+      this.mainFormStream = new Subject<FormGroup>();
+      this.resourceIdStream = new Subject<string>();
+
+      this._subscription = 
+      Observable.zip(
+          this.mainFormStream.distinctUntilChanged(),
+          this.resourceIdStream.distinctUntilChanged(),
+          (g, r) => ({mainForm: g, resourceId: r})
+      )
+      .switchMap(s => {
+        this._resourceId = s.resourceId;
+        this._mainForm = s.mainForm;
+        this._busyState.setBusyState();
+        // Not bothering to check RBAC since this component will only be used in Standalone mode
+        return this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true)
+      })
+      .do(null, error => {
+        this._aiService.trackEvent("/errors/app-settings", error);
+        this._busyState.clearBusyState();
+      })
+      .retry()
+      .subscribe(r => {
+          this._busyState.clearBusyState();
+          this._appSettingsArm = r.json();
+          this._setupForm(this._appSettingsArm);
+      });
   }
 
   private _setupForm(appSettingsArm: ArmObj<any>){
@@ -74,50 +103,39 @@ export class AppSettingsComponent implements OnInit {
       }
     }
 
-    if(this.mainGroup.contains("appSettings")){
-      this.mainGroup.setControl("appSettings", this.groupArray);
+    if(this._mainForm.contains("appSettings")){
+      this._mainForm.setControl("appSettings", this.groupArray);
     }
     else{
-      this.mainGroup.addControl("appSettings", this.groupArray);
+      this._mainForm.addControl("appSettings", this.groupArray);
     }
 
   }
 
-  @Input() mainGroup : FormGroup;
+  @Input() set mainForm(value: FormGroup){
+      this.mainFormStream.next(value);
+  }
+
+  @Input() set resourceId(value : string){
+      this.resourceIdStream.next(value);
+  }
+
+  ngOnChanges(changes: SimpleChanges){
+    // if (changes['mainForm'] || changes['resourceId']) {
+    // }
+  }
 
   ngOnInit() {
   }
 
   ngOnDestroy(): void{
-    //this._viewInfoSubscription.unsubscribe();
-  }
-
-  load(resourceId : string) : Observable<boolean>{
-    this._resourceId = resourceId;
-    let success = false;
-
-    //if(this._resourceId && this.mainGroup){
-        //this._busyState.setBusyState();
-        this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true)
-        .do(null, error => {
-            this._aiService.trackEvent("/errors/site-config", error);
-            //this._busyState.clearBusyState();
-        })
-        .retry()
-        .subscribe(r => {
-            //this._busyState.clearBusyState();
-            this._appSettingsArm = r.json();
-            this._setupForm(this._appSettingsArm);
-            success = true;
-        });
-    //}
-    return Observable.of(success);
+    this._subscription.unsubscribe();
   }
 
   save() : Observable<boolean>{
     let success = false;
 
-    let appSettingGroups = (<FormArray>this.mainGroup.controls["appSettings"]).controls;
+    let appSettingGroups = this.groupArray.controls;
     appSettingGroups.forEach(group => {
       let controls = (<FormGroup>group).controls;
       for(let controlName in controls){
@@ -127,7 +145,7 @@ export class AppSettingsComponent implements OnInit {
       }
     });
 
-    if(this.mainGroup.valid){
+    if(this._mainForm.valid){
       let appSettingsArm: ArmObj<any> = JSON.parse(JSON.stringify(this._appSettingsArm));
       delete appSettingsArm.properties;
       appSettingsArm.properties = {};
@@ -136,13 +154,13 @@ export class AppSettingsComponent implements OnInit {
         appSettingsArm.properties[appSettingGroups[i].value.name] = appSettingGroups[i].value.value;
       }
 
-      //this._busyState.setBusyState();
+      this._busyState.setBusyState();
 
       this._cacheService.putArm(`${this._resourceId}/config/appSettings`, null, appSettingsArm)
-      .subscribe(r => {
-        //this._busyState.clearBusyState();
-        this._appSettingsArm = r.appSettingsResponse.json();
+      .subscribe(appSettingsResponse => {
+        this._appSettingsArm = appSettingsResponse.json();
         this._setupForm(this._appSettingsArm);
+        this._busyState.clearBusyState();
         success = true;
       });
     }
@@ -151,13 +169,13 @@ export class AppSettingsComponent implements OnInit {
   }
 
   discard() : Observable<boolean>{
-    this.mainGroup.controls["appSettings"].reset();
+    this.groupArray.reset();
     this._setupForm(this._appSettingsArm);
     return Observable.of(true);
   }
 
   deleteAppSetting(group: FormGroup){
-    let appSettings = <FormArray>this.mainGroup.controls["appSettings"];
+    let appSettings = this.groupArray;
     this._deleteRow(group, appSettings);
     appSettings.updateValueAndValidity();
   }
@@ -171,7 +189,7 @@ export class AppSettingsComponent implements OnInit {
   }
 
   addAppSetting(){
-    let appSettings = <FormArray>this.mainGroup.controls["appSettings"];
+    let appSettings = this.groupArray;
     let group = this._fb.group({
         name: [
           null,
@@ -183,6 +201,6 @@ export class AppSettingsComponent implements OnInit {
 
     (<CustomFormGroup>group)._msStartInEditMode = true;
     appSettings.push(group);
-    this.mainGroup.markAsDirty();
+    this._mainForm.markAsDirty();
   }
 }

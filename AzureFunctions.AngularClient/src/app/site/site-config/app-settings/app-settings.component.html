@@ -1,7 +1,7 @@
 <div *ngIf="!!groupArray">
   <h3 class="text-level2-heading">{{ 'feature_applicationSettingsName' | translate }}</h3>
   
-  <tbl tblClass="tbl fixed stretch" [items]="mainGroup.controls['appSettings'].controls" #appSettingsTable>
+  <tbl tblClass="tbl fixed stretch" [items]="groupArray.controls" #appSettingsTable>
     <tr class="header-row">
       <th class="nameCol"></th>
       <th class="valueCol"></th>

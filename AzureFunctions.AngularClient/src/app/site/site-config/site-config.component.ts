@@ -35,7 +35,7 @@ export class SiteConfigComponent implements OnInit, OnChanges {
   public viewInfoStream: Subject<TreeViewInfo>;
 
   public mainForm: FormGroup;
-  public showForm: boolean = false;
+  private resourceId: string;
   public connectionStringTypes: DropDownElement<ConnectionStringType>[];
   public Resources = PortalResources;
 
@@ -45,7 +45,6 @@ export class SiteConfigComponent implements OnInit, OnChanges {
   // private _webConfigArm: ArmObj<SiteConfig>;
   // private _availableStacksArm: ArmArrayResult<AvailableStack>;
   private _busyState: BusyStateComponent;
-  private _resourceId: string;
 
   // private _requiredValidator: RequiredValidator;
   // private _uniqueAppSettingValidator: UniqueValidator;
@@ -72,41 +71,17 @@ export class SiteConfigComponent implements OnInit, OnChanges {
       this._viewInfoSubscription = this.viewInfoStream
       .distinctUntilChanged()
       .switchMap(viewInfo => {
-        this._busyState.setBusyState();
-        this._resourceId = viewInfo.resourceId;
+        this.resourceId = viewInfo.resourceId;
         this.mainForm = this._fb.group({});
+        return Observable.of(true);
         // Not bothering to check RBAC since this component will only be used in Standalone mode
-        return Observable.zip(
-          // this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true),
-          // this._cacheService.postArm(`${this._resourceId}/config/connectionstrings/list`, true),
-          // this._cacheService.getArm(`${this._resourceId}/config/web`, true),
-          // this._availableStacksLoaded === false ? this._cacheService.getArm(`/providers/Microsoft.Web/availablestacks`, true) : Observable.of(null),
-          // (a,c,w,s) => ({appSettingResponse: a, connectionStringResponse: c, webConfigResponse: w, availableStacksResponse: s})
-          this.appSettings ? this.appSettings.load(this._resourceId) : Observable.of(false),
-          this.connectionStrings ? this.connectionStrings.load(this._resourceId) : Observable.of(false),
-          (a,c) => ({appSettingLoaded: a, connectionStringsLoaded: c})
-        )
       })
-      .do(null, error => {
-        this._aiService.trackEvent("/errors/site-config", error);
-        this._busyState.clearBusyState();
-      })
-      .retry()
       .subscribe(r => {
-        this._busyState.clearBusyState();
-        // this._appSettingsArm = r.appSettingResponse.json();
-        // this._connectionStringsArm = r.connectionStringResponse.json();
-
-        // this._webConfigArm = r.webConfigResponse.json();
-        // this._availableStacksArm = r.availableStacksResponse.json();
-        // this._availableStacksLoaded = true;
-        // this._setupForm(this._appSettingsArm, this._connectionStringsArm, this._webConfigArm);
       });
   }
 
 /*
   private _setupForm(appSettingsArm: ArmObj<any>, connectionStringsArm: ArmObj<ConnectionStrings>, webConfigArm: ArmObj<SiteConfig>){
-      this.showForm = false;
       let appSettings = this._fb.array([]);
       let connectionStrings = this._fb.array([]);
       let generalSettings = this._fb.group({});
@@ -181,8 +156,6 @@ export class SiteConfigComponent implements OnInit, OnChanges {
         connectionStrings: connectionStrings,
         generalSettings: generalSettings
       });
-
-      this.showForm = true;
   }
 
   private _getConnectionStringTypes(defaultType: ConnectionStringType){
@@ -242,12 +215,14 @@ export class SiteConfigComponent implements OnInit, OnChanges {
     return this._availableStacksArm.value.find(stackArm => stackArm.properties.name === stackName).properties;
   }
 */
-  @Input() viewInfoInput: TreeViewInfo
+   @Input() set viewInfoInput(viewInfo: TreeViewInfo){
+       this.viewInfoStream.next(viewInfo);
+   }
   
   ngOnChanges(changes: SimpleChanges){
-    if (changes['viewInfoInput']) {
-        this.viewInfoStream.next(this.viewInfoInput);
-    }
+  //   if (changes['viewInfoInput']) {
+  //       this.viewInfoStream.next(this.viewInfoInput);
+  //   }
   }
 
   ngOnInit() {
@@ -320,7 +295,7 @@ export class SiteConfigComponent implements OnInit, OnChanges {
       });
       */
 
-      this._busyState.setBusyState();
+      //this._busyState.setBusyState();
 
       Observable.zip(
         this.appSettings.save(),
@@ -328,7 +303,7 @@ export class SiteConfigComponent implements OnInit, OnChanges {
         (a, c) => ({appSettingsSaved: a, connectionStringsSaved: c})
       )
       .subscribe(r => {
-        this._busyState.clearBusyState();
+        //this._busyState.clearBusyState();
       });
 
   }

@@ -229,11 +229,13 @@ export class SiteConfigComponent implements OnInit {
   deleteAppSetting(group: FormGroup){
     let appSettings = <FormArray>this.mainForm.controls["appSettings"];
     this._deleteRow(group, appSettings);
+    appSettings.updateValueAndValidity();
   }
 
   deleteConnectionString(group: FormGroup){
     let connectionStrings = <FormArray>this.mainForm.controls["connectionStrings"];
     this._deleteRow(group, connectionStrings);
+    connectionStrings.updateValueAndValidity();
   }
 
   private _deleteRow(group: FormGroup, formArray: FormArray){

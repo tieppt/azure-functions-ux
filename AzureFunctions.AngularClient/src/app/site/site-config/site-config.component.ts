@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, ViewChild, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormArray, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -13,23 +13,25 @@ import { ConnectionStrings, ConnectionStringType } from './../../shared/models/a
 import { BusyStateComponent } from './../../busy-state/busy-state.component';
 import { TabsComponent } from './../../tabs/tabs.component';
 import { CustomFormGroup, CustomFormControl } from './../../controls/click-to-edit/click-to-edit.component';
-import { ArmObj, ArmArrayResult } from './../../shared/models/arm/arm-obj';
-import { TblItem } from './../../controls/tbl/tbl.component';
+//import { ArmObj, ArmArrayResult } from './../../shared/models/arm/arm-obj';
+//import { TblItem } from './../../controls/tbl/tbl.component';
 import { CacheService } from './../../shared/services/cache.service';
 import { TreeViewInfo } from './../../tree-view/models/tree-view-info';
-import { UniqueValidator } from 'app/shared/validators/uniqueValidator';
-import { RequiredValidator } from 'app/shared/validators/requiredValidator';
-import { SiteConfig } from 'app/shared/models/arm/site-config';
-import { AvailableStackNames, Version } from 'app/shared/models/constants';
-import { AvailableStack, MinorVersion, MajorVersion, Framework } from 'app/shared/models/arm/stacks';
-import { StacksHelper } from './../../shared/Utilities/stacks.helper';
+//import { UniqueValidator } from 'app/shared/validators/uniqueValidator';
+//import { RequiredValidator } from 'app/shared/validators/requiredValidator';
+//import { SiteConfig } from 'app/shared/models/arm/site-config';
+//import { AvailableStackNames, Version } from 'app/shared/models/constants';
+//import { AvailableStack, MinorVersion, MajorVersion, Framework } from 'app/shared/models/arm/stacks';
+//import { StacksHelper } from './../../shared/Utilities/stacks.helper';
+import { AppSettingsComponent } from './app-settings/app-settings.component';
+import { ConnectionStringsComponent } from './connection-strings/connection-strings.component';
 
 @Component({
   selector: 'site-config',
   templateUrl: './site-config.component.html',
   styleUrls: ['./site-config.component.scss']
 })
-export class SiteConfigComponent implements OnInit {
+export class SiteConfigComponent implements OnInit, OnChanges {
   public viewInfoStream: Subject<TreeViewInfo>;
 
   public mainForm: FormGroup;
@@ -38,21 +40,24 @@ export class SiteConfigComponent implements OnInit {
   public Resources = PortalResources;
 
   private _viewInfoSubscription: RxSubscription;
-  private _appSettingsArm: ArmObj<any>;
-  private _connectionStringsArm: ArmObj<ConnectionStrings>;
-  private _webConfigArm: ArmObj<SiteConfig>;
-  private _availableStacksArm: ArmArrayResult<AvailableStack>;
+  // private _appSettingsArm: ArmObj<any>;
+  // private _connectionStringsArm: ArmObj<ConnectionStrings>;
+  // private _webConfigArm: ArmObj<SiteConfig>;
+  // private _availableStacksArm: ArmArrayResult<AvailableStack>;
   private _busyState: BusyStateComponent;
   private _resourceId: string;
 
-  private _requiredValidator: RequiredValidator;
-  private _uniqueAppSettingValidator: UniqueValidator;
-  private _uniqueCsValidator: UniqueValidator;
+  // private _requiredValidator: RequiredValidator;
+  // private _uniqueAppSettingValidator: UniqueValidator;
+  // private _uniqueCsValidator: UniqueValidator;
 
-  private _availableStacksLoaded = false;
-  private _javaMajorToMinorMap: Map<string, MinorVersion[]>;
-  private _workerProcess64BitEnabled = false;
-  private _webSocketsEnabled = false;
+  // private _availableStacksLoaded = false;
+  // private _javaMajorToMinorMap: Map<string, MinorVersion[]>;
+  // private _workerProcess64BitEnabled = false;
+  // private _webSocketsEnabled = false;
+
+  @ViewChild(AppSettingsComponent) appSettings : AppSettingsComponent;
+  @ViewChild(ConnectionStringsComponent) connectionStrings : ConnectionStringsComponent;
 
   constructor(
     private _cacheService: CacheService,
@@ -69,14 +74,17 @@ export class SiteConfigComponent implements OnInit {
       .switchMap(viewInfo => {
         this._busyState.setBusyState();
         this._resourceId = viewInfo.resourceId;
-
+        this.mainForm = this._fb.group({});
         // Not bothering to check RBAC since this component will only be used in Standalone mode
         return Observable.zip(
-          this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true),
-          this._cacheService.postArm(`${this._resourceId}/config/connectionstrings/list`, true),
-          this._cacheService.getArm(`${this._resourceId}/config/web`, true),
-          this._availableStacksLoaded === false ? this._cacheService.getArm(`/providers/Microsoft.Web/availablestacks`, true) : Observable.of(null),
-          (a,c,w,s) => ({appSettingResponse: a, connectionStringResponse: c, webConfigResponse: w, availableStacksResponse: s})
+          // this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true),
+          // this._cacheService.postArm(`${this._resourceId}/config/connectionstrings/list`, true),
+          // this._cacheService.getArm(`${this._resourceId}/config/web`, true),
+          // this._availableStacksLoaded === false ? this._cacheService.getArm(`/providers/Microsoft.Web/availablestacks`, true) : Observable.of(null),
+          // (a,c,w,s) => ({appSettingResponse: a, connectionStringResponse: c, webConfigResponse: w, availableStacksResponse: s})
+          this.appSettings ? this.appSettings.load(this._resourceId) : Observable.of(false),
+          this.connectionStrings ? this.connectionStrings.load(this._resourceId) : Observable.of(false),
+          (a,c) => ({appSettingLoaded: a, connectionStringsLoaded: c})
         )
       })
       .do(null, error => {
@@ -86,16 +94,17 @@ export class SiteConfigComponent implements OnInit {
       .retry()
       .subscribe(r => {
         this._busyState.clearBusyState();
-        this._appSettingsArm = r.appSettingResponse.json();
-        this._connectionStringsArm = r.connectionStringResponse.json();
+        // this._appSettingsArm = r.appSettingResponse.json();
+        // this._connectionStringsArm = r.connectionStringResponse.json();
 
-        this._webConfigArm = r.webConfigResponse.json();
-        this._availableStacksArm = r.availableStacksResponse.json();
-        this._availableStacksLoaded = true;
-        this._setupForm(this._appSettingsArm, this._connectionStringsArm, this._webConfigArm);
+        // this._webConfigArm = r.webConfigResponse.json();
+        // this._availableStacksArm = r.availableStacksResponse.json();
+        // this._availableStacksLoaded = true;
+        // this._setupForm(this._appSettingsArm, this._connectionStringsArm, this._webConfigArm);
       });
   }
 
+/*
   private _setupForm(appSettingsArm: ArmObj<any>, connectionStringsArm: ArmObj<ConnectionStrings>, webConfigArm: ArmObj<SiteConfig>){
       this.showForm = false;
       let appSettings = this._fb.array([]);
@@ -232,9 +241,13 @@ export class SiteConfigComponent implements OnInit {
     }
     return this._availableStacksArm.value.find(stackArm => stackArm.properties.name === stackName).properties;
   }
-
-  @Input() set viewInfoInput(viewInfo: TreeViewInfo){
-      this.viewInfoStream.next(viewInfo);
+*/
+  @Input() viewInfoInput: TreeViewInfo
+  
+  ngOnChanges(changes: SimpleChanges){
+    if (changes['viewInfoInput']) {
+        this.viewInfoStream.next(this.viewInfoInput);
+    }
   }
 
   ngOnInit() {
@@ -245,6 +258,7 @@ export class SiteConfigComponent implements OnInit {
   }
 
   save(){
+    /*
     let appSettingGroups = (<FormArray>this.mainForm.controls["appSettings"]).controls;
     appSettingGroups.forEach(group => {
       let controls = (<FormGroup>group).controls;
@@ -304,14 +318,32 @@ export class SiteConfigComponent implements OnInit {
         this._connectionStringsArm = r.connectionStringsResponse.json();
         this._setupForm(this._appSettingsArm, this._connectionStringsArm, this._webConfigArm);
       });
-    }
+      */
+
+      this._busyState.setBusyState();
+
+      Observable.zip(
+        this.appSettings.save(),
+        this.connectionStrings.save(),
+        (a, c) => ({appSettingsSaved: a, connectionStringsSaved: c})
+      )
+      .subscribe(r => {
+        this._busyState.clearBusyState();
+      });
+
   }
 
   discard(){
-    this.mainForm.reset();
-    this._setupForm(this._appSettingsArm, this._connectionStringsArm, this._webConfigArm);
+      Observable.zip(
+        this.appSettings.discard(),
+        this.connectionStrings.discard(),
+        (a, c) => ({appSettingsDiscarded: a, connectionStringsDiscarded: c})
+      )
+      .subscribe(r => {
+      });
   }
 
+/*
   deleteAppSetting(group: FormGroup){
     let appSettings = <FormArray>this.mainForm.controls["appSettings"];
     this._deleteRow(group, appSettings);
@@ -370,4 +402,5 @@ export class SiteConfigComponent implements OnInit {
 
     this.mainForm.markAsDirty();
   }
+*/
 }

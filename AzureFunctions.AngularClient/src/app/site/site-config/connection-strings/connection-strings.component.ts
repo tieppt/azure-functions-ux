@@ -203,7 +203,6 @@ constructor(
   }
 
   addConnectionString(){
-
     let connectionStrings = this.groupArray;
     let connectionStringDropDownTypes = this._getConnectionStringTypes(ConnectionStringType.SQLAzure);
 

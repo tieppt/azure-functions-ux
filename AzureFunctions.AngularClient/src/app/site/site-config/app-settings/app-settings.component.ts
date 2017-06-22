@@ -29,15 +29,16 @@ export class AppSettingsComponent implements OnInit, OnChanges {
   public Resources = PortalResources;
   public groupArray: FormArray;
 
-  public mainFormStream: Subject<FormGroup>;
+  //public mainFormStream: Subject<FormGroup>;
   public resourceIdStream: Subject<string>;
   private _subscription: RxSubscription;
 
   private _appSettingsArm: ArmObj<any>;
   private _busyState: BusyStateComponent;
+  private _busyStateKey: string;
 
   private _resourceId: string;
-  private _mainForm: FormGroup;
+  public _mainForm: FormGroup;
 
   private _requiredValidator: RequiredValidator;
   private _uniqueAppSettingValidator: UniqueValidator;
@@ -50,36 +51,64 @@ export class AppSettingsComponent implements OnInit, OnChanges {
     tabsComponent: TabsComponent
     ) {
       this._busyState = tabsComponent.busyState;
+      this._busyState.clear.subscribe(event => this._busyStateKey = undefined);
 
-      this.mainFormStream = new Subject<FormGroup>();
       this.resourceIdStream = new Subject<string>();
+      /*
+      this.mainFormStream = new Subject<FormGroup>();
 
       this._subscription = 
       Observable.zip(
-          this.mainFormStream.distinctUntilChanged(),
-          this.resourceIdStream.distinctUntilChanged(),
+          this.mainFormStream,
+          this.resourceIdStream,
           (g, r) => ({mainForm: g, resourceId: r})
       )
+      .distinctUntilChanged()
       .switchMap(s => {
         this._resourceId = s.resourceId;
         this._mainForm = s.mainForm;
-        this._busyState.setBusyState();
+        this.setScopedBusyState();
         // Not bothering to check RBAC since this component will only be used in Standalone mode
         return this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true)
       })
       .do(null, error => {
         this._aiService.trackEvent("/errors/app-settings", error);
-        this._busyState.clearBusyState();
+        this.clearScopedBusyState();
       })
       .retry()
       .subscribe(r => {
-          this._busyState.clearBusyState();
+          this.clearScopedBusyState();
+          this._appSettingsArm = r.json();
+          this._setupForm(this._appSettingsArm);
+      });
+      */
+
+      this._subscription = 
+      this.resourceIdStream
+      .distinctUntilChanged()
+      .switchMap(resourceId => {
+        this._resourceId = resourceId;
+        this.setScopedBusyState();
+        // Not bothering to check RBAC since this component will only be used in Standalone mode
+        return this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true)
+      })
+      .do(null, error => {
+        this._aiService.trackEvent("/errors/app-settings", error);
+        this.clearScopedBusyState();
+      })
+      .retry()
+      .subscribe(r => {
+          this.clearScopedBusyState();
           this._appSettingsArm = r.json();
           this._setupForm(this._appSettingsArm);
       });
   }
 
   private _setupForm(appSettingsArm: ArmObj<any>){
+    if(!appSettingsArm){
+        return;
+    }
+
     this.groupArray = this._fb.array([]);
 
     this._requiredValidator = new RequiredValidator(this._translateService);
@@ -112,12 +141,18 @@ export class AppSettingsComponent implements OnInit, OnChanges {
 
   }
 
+  setupForm(){
+    this._setupForm(this._appSettingsArm);
+  }
+
   @Input() set mainForm(value: FormGroup){
-      this.mainFormStream.next(value);
+    this._mainForm = value;
+    //this.mainFormStream.next(value);
+    this._setupForm(this._appSettingsArm);
   }
 
   @Input() set resourceId(value : string){
-      this.resourceIdStream.next(value);
+    this.resourceIdStream.next(value);
   }
 
   ngOnChanges(changes: SimpleChanges){
@@ -132,9 +167,7 @@ export class AppSettingsComponent implements OnInit, OnChanges {
     this._subscription.unsubscribe();
   }
 
-  save() : Observable<boolean>{
-    let success = false;
-
+  validate(){
     let appSettingGroups = this.groupArray.controls;
     appSettingGroups.forEach(group => {
       let controls = (<FormGroup>group).controls;
@@ -144,6 +177,10 @@ export class AppSettingsComponent implements OnInit, OnChanges {
         control.updateValueAndValidity();
       }
     });
+  }
+
+  save() : Observable<boolean>{
+    let appSettingGroups = this.groupArray.controls;
 
     if(this._mainForm.valid){
       let appSettingsArm: ArmObj<any> = JSON.parse(JSON.stringify(this._appSettingsArm));
@@ -154,25 +191,24 @@ export class AppSettingsComponent implements OnInit, OnChanges {
         appSettingsArm.properties[appSettingGroups[i].value.name] = appSettingGroups[i].value.value;
       }
 
-      this._busyState.setBusyState();
-
-      this._cacheService.putArm(`${this._resourceId}/config/appSettings`, null, appSettingsArm)
-      .subscribe(appSettingsResponse => {
+      return this._cacheService.putArm(`${this._resourceId}/config/appSettings`, null, appSettingsArm)
+      .map(appSettingsResponse => {
         this._appSettingsArm = appSettingsResponse.json();
-        this._setupForm(this._appSettingsArm);
-        this._busyState.clearBusyState();
-        success = true;
+        return Observable.of(true);
+      })
+      .catch(error => {
+        return Observable.of(false);
       });
     }
-
-    return Observable.of(success);
+    else{
+      return(Observable.of(false));
+    }
   }
 
-  discard() : Observable<boolean>{
-    this.groupArray.reset();
-    this._setupForm(this._appSettingsArm);
-    return Observable.of(true);
-  }
+  //discard(){
+  //  this.groupArray.reset();
+  //  this._setupForm(this._appSettingsArm);
+  //}
 
   deleteAppSetting(group: FormGroup){
     let appSettings = this.groupArray;
@@ -203,4 +239,33 @@ export class AppSettingsComponent implements OnInit, OnChanges {
     appSettings.push(group);
     this._mainForm.markAsDirty();
   }
+
+
+  private setScopedBusyState(){
+    this._busyStateKey = this._busyState.setScopedBusyState(this._busyStateKey);
+  }
+
+  private clearScopedBusyState(){
+    this._busyState.clearScopedBusyState(this._busyStateKey);
+    this._busyStateKey = undefined;
+  }
+
+/*
+  private setScopedBusyState(){
+    this._setScopedBusyState(this._busyStateKey, this._busyState);
+  }
+
+  private clearScopedBusyState(){
+    this._clearScopedBusyState(this._busyStateKey, this._busyState);
+  }
+
+  private _setScopedBusyState(busyStateKey: string, busyState: BusyStateComponent){
+    busyStateKey = busyState.setScopedBusyState(busyStateKey);
+  }
+
+  private _clearScopedBusyState(busyStateKey: string, busyState: BusyStateComponent){
+    busyState.clearScopedBusyState(busyStateKey);
+    busyStateKey = undefined;
+  }
+*/
 }

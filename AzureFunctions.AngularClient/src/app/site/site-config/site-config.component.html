@@ -72,9 +72,12 @@
 </div>
 -->
 
-<app-settings [mainForm]=mainForm [resourceId]="resourceId"></app-settings>
+<p>{{mainForm.timeStamp}}</p>
+<p>busyStateKeys: {{_busyState.busyStateKeys}}</p>
 
-<connection-strings [mainForm]=mainForm [resourceId]="resourceId"></connection-strings>
+<app-settings [mainForm]="mainForm" [resourceId]="resourceId"></app-settings>
+
+<connection-strings [mainForm]="mainForm" [resourceId]="resourceId"></connection-strings>
 
 
 </div>

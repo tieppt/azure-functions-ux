@@ -29,16 +29,12 @@ export class AppSettingsComponent implements OnInit, OnChanges {
   public Resources = PortalResources;
   public groupArray: FormArray;
 
-  //public mainFormStream: Subject<FormGroup>;
   public resourceIdStream: Subject<string>;
   private _subscription: RxSubscription;
 
   private _appSettingsArm: ArmObj<any>;
   private _busyState: BusyStateComponent;
   private _busyStateKey: string;
-
-  private _resourceId: string;
-  public _mainForm: FormGroup;
 
   private _requiredValidator: RequiredValidator;
   private _uniqueAppSettingValidator: UniqueValidator;
@@ -54,43 +50,15 @@ export class AppSettingsComponent implements OnInit, OnChanges {
       this._busyState.clear.subscribe(event => this._busyStateKey = undefined);
 
       this.resourceIdStream = new Subject<string>();
-      /*
-      this.mainFormStream = new Subject<FormGroup>();
-
-      this._subscription = 
-      Observable.zip(
-          this.mainFormStream,
-          this.resourceIdStream,
-          (g, r) => ({mainForm: g, resourceId: r})
-      )
-      .distinctUntilChanged()
-      .switchMap(s => {
-        this._resourceId = s.resourceId;
-        this._mainForm = s.mainForm;
-        this.setScopedBusyState();
-        // Not bothering to check RBAC since this component will only be used in Standalone mode
-        return this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true)
-      })
-      .do(null, error => {
-        this._aiService.trackEvent("/errors/app-settings", error);
-        this.clearScopedBusyState();
-      })
-      .retry()
-      .subscribe(r => {
-          this.clearScopedBusyState();
-          this._appSettingsArm = r.json();
-          this._setupForm(this._appSettingsArm);
-      });
-      */
 
       this._subscription = 
       this.resourceIdStream
       .distinctUntilChanged()
       .switchMap(resourceId => {
-        this._resourceId = resourceId;
+        this.resourceId = resourceId;
         this.setScopedBusyState();
         // Not bothering to check RBAC since this component will only be used in Standalone mode
-        return this._cacheService.postArm(`${this._resourceId}/config/appSettings/list`, true)
+        return this._cacheService.postArm(`${this.resourceId}/config/appSettings/list`, true)
       })
       .do(null, error => {
         this._aiService.trackEvent("/errors/app-settings", error);
@@ -132,32 +100,31 @@ export class AppSettingsComponent implements OnInit, OnChanges {
       }
     }
 
-    if(this._mainForm.contains("appSettings")){
-      this._mainForm.setControl("appSettings", this.groupArray);
+    if(this.mainForm.contains("appSettings")){
+      this.mainForm.setControl("appSettings", this.groupArray);
     }
     else{
-      this._mainForm.addControl("appSettings", this.groupArray);
+      this.mainForm.addControl("appSettings", this.groupArray);
     }
 
   }
 
-  setupForm(){
-    this._setupForm(this._appSettingsArm);
-  }
+  @Input() mainForm: FormGroup;
 
-  @Input() set mainForm(value: FormGroup){
-    this._mainForm = value;
-    //this.mainFormStream.next(value);
-    this._setupForm(this._appSettingsArm);
-  }
-
-  @Input() set resourceId(value : string){
-    this.resourceIdStream.next(value);
-  }
+  @Input() resourceId: string;
 
   ngOnChanges(changes: SimpleChanges){
-    // if (changes['mainForm'] || changes['resourceId']) {
-    // }
+    let resourceIdChanged = false;
+
+    if (changes['resourceId']) {
+      this.resourceIdStream.next(this.resourceId);
+      resourceIdChanged = true;
+    }
+
+    if(changes['mainForm'] && !resourceIdChanged)
+    {
+      this._setupForm(this._appSettingsArm);
+    }
   }
 
   ngOnInit() {
@@ -182,7 +149,7 @@ export class AppSettingsComponent implements OnInit, OnChanges {
   save() : Observable<boolean>{
     let appSettingGroups = this.groupArray.controls;
 
-    if(this._mainForm.valid){
+    if(this.mainForm.valid){
       let appSettingsArm: ArmObj<any> = JSON.parse(JSON.stringify(this._appSettingsArm));
       delete appSettingsArm.properties;
       appSettingsArm.properties = {};
@@ -191,7 +158,7 @@ export class AppSettingsComponent implements OnInit, OnChanges {
         appSettingsArm.properties[appSettingGroups[i].value.name] = appSettingGroups[i].value.value;
       }
 
-      return this._cacheService.putArm(`${this._resourceId}/config/appSettings`, null, appSettingsArm)
+      return this._cacheService.putArm(`${this.resourceId}/config/appSettings`, null, appSettingsArm)
       .map(appSettingsResponse => {
         this._appSettingsArm = appSettingsResponse.json();
         return Observable.of(true);
@@ -237,7 +204,7 @@ export class AppSettingsComponent implements OnInit, OnChanges {
 
     (<CustomFormGroup>group)._msStartInEditMode = true;
     appSettings.push(group);
-    this._mainForm.markAsDirty();
+    this.mainForm.markAsDirty();
   }
 
 

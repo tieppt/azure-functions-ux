@@ -26,21 +26,17 @@ import { RequiredValidator } from 'app/shared/validators/requiredValidator';
   templateUrl: './connection-strings.component.html',
   styleUrls: ['./connection-strings.component.scss']
 })
-export class ConnectionStringsComponent implements OnInit {
+export class ConnectionStringsComponent implements OnInit, OnChanges {
   public connectionStringTypes: DropDownElement<ConnectionStringType>[];
   public Resources = PortalResources;
   public groupArray: FormArray;
 
-  //public mainFormStream: Subject<FormGroup>;
   public resourceIdStream: Subject<string>;
   private _subscription: RxSubscription;
 
   private _connectionStringsArm: ArmObj<ConnectionStrings>;
   private _busyState: BusyStateComponent;
   private _busyStateKey: string;
-
-  private _resourceId: string;
-  public _mainForm: FormGroup;
 
   private _requiredValidator: RequiredValidator;
   private _uniqueCsValidator: UniqueValidator;
@@ -56,43 +52,15 @@ constructor(
       this._busyState.clear.subscribe(event => this._busyStateKey = undefined);
 
       this.resourceIdStream = new Subject<string>();
-      /*
-      this.mainFormStream = new Subject<FormGroup>();
-
-      this._subscription = 
-      Observable.zip(
-          this.mainFormStream,
-          this.resourceIdStream,
-          (g, r) => ({mainForm: g, resourceId: r})
-      )
-      .distinctUntilChanged()
-      .switchMap(s => {
-        this._resourceId = s.resourceId;
-        this._mainForm = s.mainForm;
-        this.setScopedBusyState()
-        // Not bothering to check RBAC since this component will only be used in Standalone mode
-        return this._cacheService.postArm(`${this._resourceId}/config/connectionstrings/list`, true)
-      })
-      .do(null, error => {
-        this._aiService.trackEvent("/errors/app-settings", error);
-        this.clearScopedBusyState();
-      })
-      .retry()
-      .subscribe(r => {
-          this.clearScopedBusyState();
-          this._connectionStringsArm = r.json();
-          this._setupForm(this._connectionStringsArm);
-      });
-      */
 
       this._subscription = 
       this.resourceIdStream
       .distinctUntilChanged()
       .switchMap(resourceId => {
-        this._resourceId = resourceId;
+        this.resourceId = resourceId;
         this.setScopedBusyState()
         // Not bothering to check RBAC since this component will only be used in Standalone mode
-        return this._cacheService.postArm(`${this._resourceId}/config/connectionstrings/list`, true)
+        return this._cacheService.postArm(`${this.resourceId}/config/connectionstrings/list`, true)
       })
       .do(null, error => {
         this._aiService.trackEvent("/errors/app-settings", error);
@@ -141,40 +109,31 @@ constructor(
       }
     }
 
-    if(this._mainForm.contains("connectionStrings")){
-      this._mainForm.setControl("connectionStrings", this.groupArray);
+    if(this.mainForm.contains("connectionStrings")){
+      this.mainForm.setControl("connectionStrings", this.groupArray);
     }
     else{
-      this._mainForm.addControl("connectionStrings", this.groupArray);
+      this.mainForm.addControl("connectionStrings", this.groupArray);
     }
 
   }
 
-  setupForm(){
-    this._setupForm(this._connectionStringsArm);
-  }
+  @Input() mainForm: FormGroup;
 
-  @Input() set mainForm(value: FormGroup){
-    this._mainForm = value;
-    //this.mainFormStream.next(value);
-    this._setupForm(this._connectionStringsArm);
-  }
-
-  @Input() set resourceId(value : string){
-    this.resourceIdStream.next(value);
-  }
+  @Input() resourceId: string;
 
   ngOnChanges(changes: SimpleChanges){
-    // let resourceIdChanged = false;
+    let resourceIdChanged = false;
 
-    // if (changes['resourceId']) {
+    if (changes['resourceId']) {
+      this.resourceIdStream.next(this.resourceId);
+      resourceIdChanged = true;
+    }
 
-    // }
-
-    // if(changes['mainForm'])
-    // {
-
-    // }
+    if(changes['mainForm'] && !resourceIdChanged)
+    {
+      this._setupForm(this._connectionStringsArm);
+    }
   }
 
   ngOnInit() {
@@ -199,7 +158,7 @@ constructor(
   save() : Observable<boolean>{
     let connectionStringGroups = this.groupArray.controls;
 
-    if(this._mainForm.valid){
+    if(this.mainForm.valid){
       let connectionStringsArm: ArmObj<any> = JSON.parse(JSON.stringify(this._connectionStringsArm));
       delete connectionStringsArm.properties;
       connectionStringsArm.properties = {};
@@ -214,7 +173,7 @@ constructor(
         connectionStringsArm.properties[connectionStringGroups[i].value.name] = connectionString;
       }
 
-      return this._cacheService.putArm(`${this._resourceId}/config/connectionstrings`, null, connectionStringsArm)
+      return this._cacheService.putArm(`${this.resourceId}/config/connectionstrings`, null, connectionStringsArm)
       .map(connectionStringsResponse => {
         this._connectionStringsArm = connectionStringsResponse.json();
         return Observable.of(true);
@@ -229,7 +188,7 @@ constructor(
   }
 
   //discard(){
-  //  this._mainForm.controls["connectionStrings"].reset();
+  //  this.mainForm.controls["connectionStrings"].reset();
   //  this._setupForm(this._connectionStringsArm);
   //}
 
@@ -266,7 +225,7 @@ constructor(
 
     (<CustomFormGroup>group)._msStartInEditMode = true;
 
-    this._mainForm.markAsDirty();
+    this.mainForm.markAsDirty();
   }
 
   private _getConnectionStringTypes(defaultType: ConnectionStringType){

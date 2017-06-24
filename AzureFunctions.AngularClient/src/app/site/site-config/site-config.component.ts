@@ -19,6 +19,7 @@ import { TreeViewInfo } from './../../tree-view/models/tree-view-info';
 //import { AvailableStackNames, Version } from 'app/shared/models/constants';
 //import { AvailableStack, MinorVersion, MajorVersion, Framework } from 'app/shared/models/arm/stacks';
 //import { StacksHelper } from './../../shared/Utilities/stacks.helper';
+import { GeneralSettingsComponent } from './general-settings/general-settings.component';
 import { AppSettingsComponent } from './app-settings/app-settings.component';
 import { ConnectionStringsComponent } from './connection-strings/connection-strings.component';
 
@@ -35,15 +36,9 @@ export class SiteConfigComponent implements OnInit {
   public Resources = PortalResources;
 
   private _viewInfoSubscription: RxSubscription;
-  // private _webConfigArm: ArmObj<SiteConfig>;
-  // private _availableStacksArm: ArmArrayResult<AvailableStack>;
   private _busyState: BusyStateComponent;
 
-  // private _availableStacksLoaded = false;
-  // private _javaMajorToMinorMap: Map<string, MinorVersion[]>;
-  // private _workerProcess64BitEnabled = false;
-  // private _webSocketsEnabled = false;
-
+  @ViewChild(GeneralSettingsComponent) generalSettings : GeneralSettingsComponent;
   @ViewChild(AppSettingsComponent) appSettings : AppSettingsComponent;
   @ViewChild(ConnectionStringsComponent) connectionStrings : ConnectionStringsComponent;
 
@@ -69,76 +64,6 @@ export class SiteConfigComponent implements OnInit {
       .subscribe();
   }
 
-/*
-  private _setupForm(appSettingsArm: ArmObj<any>, connectionStringsArm: ArmObj<ConnectionStrings>, webConfigArm: ArmObj<SiteConfig>){
-      let generalSettings = this._fb.group({});
-
-      let netFrameWorkVersion = this._addWebConfigSetting("netFrameworkVersion");
-      (<any>netFrameWorkVersion).creationTime = new Date();
-      let phpVersion = this._addWebConfigSetting("phpVersion");
-      (<any>phpVersion).creationTime = new Date();
-      let javaVersion = this._addWebConfigSetting("javaVersion");
-      (<any>javaVersion).creationTime = new Date();
-      let pythonVersion = this._addWebConfigSetting("pythonVersion");
-      (<any>pythonVersion).creationTime = new Date();
-
-
-      generalSettings = this._fb.group({
-        netFrameWorkVersion: netFrameWorkVersion,
-        phpVersion: phpVersion,
-        javaVersion: javaVersion,
-        pythonVersion: pythonVersion
-      });
-
-
-      this.mainForm = this._fb.group({
-        generalSettings: generalSettings
-      });
-  }
-
-  private _addWebConfigSetting(settingName : string)
-  {
-      let stackMetadata = StacksHelper.GetStackMetadata(settingName, null);
-      let configValue = this._webConfigArm.properties[settingName];
-      let dropDownOptions = this._getStackMajorVersions(stackMetadata.AvailableStackName, configValue);
-      let value = [dropDownOptions.find(t => t.default).value]
-      let group = this._fb.group({
-        //name: [settingName],
-        value: [dropDownOptions.find(t => t.default).value]
-      });
-      //group.controls["value"].disable();
-      (<any>group).options = dropDownOptions;
-      (<any>group).friendlyName = stackMetadata.FriendlyName;
-      return group;
-  }
-
-  private _getStackMajorVersions(stackName: AvailableStackNames, defaultVersion: string){
-      let dropDownElements: DropDownElement<string>[] = []
-
-      dropDownElements.push({
-          displayLabel: "Off",
-          value: "Off",
-          default: !defaultVersion
-      })
-
-      this._getAvailableStack(stackName).majorVersions.forEach(majorVersion => {
-        dropDownElements.push({
-          displayLabel: majorVersion.displayVersion,
-          value: majorVersion.displayVersion,
-          default: majorVersion.runtimeVersion === defaultVersion
-        })
-      })
-
-      return dropDownElements;
-  }
-
-  private _getAvailableStack(stackName: AvailableStackNames){
-    if (!(this._availableStacksLoaded) || !this._availableStacksArm || !this._availableStacksArm.value || this._availableStacksArm.value.length === 0) {
-      return null;
-    }
-    return this._availableStacksArm.value.find(stackArm => stackArm.properties.name === stackName).properties;
-  }
-*/
   @Input() set viewInfoInput(viewInfo: TreeViewInfo){
       this.viewInfoStream.next(viewInfo);
   }
@@ -151,14 +76,16 @@ export class SiteConfigComponent implements OnInit {
   }
 
   save(){
+    this.generalSettings.validate();
     this.appSettings.validate();
     this.connectionStrings.validate();
 
     this._busyState.setBusyState();
     Observable.zip(
+      this.generalSettings.save(),
       this.appSettings.save(),
       this.connectionStrings.save(),
-      (a, c) => ({appSettingsSaved: a, connectionStringsSaved: c})
+      (g, a, c) => ({generalSettingsSaved: g, appSettingsSaved: a, connectionStringsSaved: c})
     )
     .subscribe(r => {
       this._busyState.clearBusyState();

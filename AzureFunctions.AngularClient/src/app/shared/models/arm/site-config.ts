@@ -10,6 +10,7 @@ export interface SiteConfig{
     netFrameworkVersion : string;
     phpVersion : string;
     javaVersion : string;
+    javaContainer: string;
     javaContainerVersion : string;
     pythonVersion : string;
     use32BitWorkerProcess : boolean;

@@ -1,4 +1,4 @@
-<div *ngIf="!!groupArray">
+<ng-container *ngIf="!!groupArray">
   <h3 class="text-level2-heading">{{ 'feature_applicationSettingsName' | translate }}</h3>
   
   <tbl tblClass="tbl fixed stretch" [items]="groupArray.controls" #appSettingsTable>
@@ -36,4 +36,4 @@
   </div>
   <p>{{mainForm.timeStamp}}</p>
   <p>{{_busyState.name}}</p>
-</div>
+</ng-container>

@@ -45,6 +45,8 @@ export class JavaSettingsGroups {
   styleUrls: ['./general-settings.component.scss']
 })
 export class GeneralSettingsComponent implements OnChanges, OnDestroy {
+  public debug = false; //for debugging
+  
   public Resources = PortalResources;
   public group: FormGroup;
 
@@ -281,6 +283,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     });
     (<any>netFrameWorkVersionGroup).options = netFrameworkVersionOptions;
     (<any>netFrameWorkVersionGroup).friendlyName = ".NET Framework version";
+    (<any>netFrameWorkVersionGroup).timeStamp = new Date(); //for debugging
 
     return netFrameWorkVersionGroup;
   }
@@ -307,6 +310,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     });
     (<any>phpVersionGroup).options = phpVersionOptions;
     (<any>phpVersionGroup).friendlyName = "PHP version";
+    (<any>phpVersionGroup).timeStamp = new Date(); //for debugging
 
     return phpVersionGroup;
   }
@@ -333,6 +337,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     });
     (<any>pythonVersionGroup).options = pythonVersionOptions;
     (<any>pythonVersionGroup).friendlyName = "Python version";
+    (<any>pythonVersionGroup).timeStamp = new Date(); //for debugging
 
     return pythonVersionGroup;
   }
@@ -384,6 +389,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     });
     (<any>javaVersionGroup).options = javaVersionOptions;
     (<any>javaVersionGroup).friendlyName = "Java version";
+    (<any>javaVersionGroup).timeStamp = new Date(); //for debugging
 
     //MinorVersion
     if(defaultJavaVersion){
@@ -404,6 +410,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     });
     (<any>javaMinorVersionGroup).options = javaMinorVersionOptions;
     (<any>javaMinorVersionGroup).friendlyName = "Java minor version";
+    (<any>javaMinorVersionGroup).timeStamp = new Date(); //for debugging
 
 
     //WebContainer
@@ -431,6 +438,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     });
     (<any>javaWebContainerGroup).options = javaWebContainerOptions;
     (<any>javaWebContainerGroup).friendlyName = "Web container";
+    (<any>javaWebContainerGroup).timeStamp = new Date(); //for debugging
 
     return {
       majorVersion:javaVersionGroup,
@@ -488,6 +496,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       });
       (<any>javaMinorVersionGroup).options = javaMinorVersionOptions;
       (<any>javaMinorVersionGroup).friendlyName = "Java minor version";
+      (<any>javaMinorVersionGroup).timeStamp = new Date(); //for debugging
 
       if(this.group.contains("javaMinorVersion")){
         this.group.setControl("javaMinorVersion", javaMinorVersionGroup);
@@ -505,6 +514,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       });
       (<any>javaWebContainerGroup).options = javaWebContainerOptions;
       (<any>javaWebContainerGroup).friendlyName = "Web container";
+      (<any>javaWebContainerGroup).timeStamp = new Date(); //for debugging
 
       if(this.group.contains("javaWebContainer")){
         this.group.setControl("javaWebContainer", javaWebContainerGroup);
@@ -752,4 +762,14 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
   //  this.group.reset();
   //  this._setupForm(this._webConfigArm);
   //}
+
+  public generalSettingsClick(){
+    let x = 1;
+    let y = x + 1;
+    //const saveResults: string[] = ["A", "B"];
+    //let saveFailures: string[] = saveResults.filter(r => r === "X");
+    //alert(!saveFailures.length);
+    //alert(saveFailures.length == 0);
+    //alert(saveFailures.length);
+  }
 }

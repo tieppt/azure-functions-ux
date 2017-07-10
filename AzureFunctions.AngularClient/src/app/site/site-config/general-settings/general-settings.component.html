@@ -1,4 +1,4 @@
-<h3 class="text-level2-heading first-config-heading">{{ 'feature_generalSettingsName' | translate }}</h3>
+<h3 (click)="generalSettingsClick()" class="text-level2-heading first-config-heading">{{ 'feature_generalSettingsName' | translate }}</h3>
 
 <div *ngIf="!group" class="settings-group-wrapper">
 
@@ -96,6 +96,13 @@
     <div class="placeholder">
       {{permissionsMessage}}
     </div>
+  </div>
+
+  <div *ngIf="debug === true">
+    <p>{{mainForm.timeStamp}}</p>
+    <p>{{this.group.parent.timeStamp}}</p>
+    <p>busyStateKeys: {{_busyState.name}}</p>
+    <p>busyStateKeys: {{_busyState.busyStateKeys}}</p>
   </div>
 
 </div>

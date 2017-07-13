@@ -504,7 +504,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       else{
         this.group.addControl("javaMinorVersion", javaMinorVersionGroup);
       }
-      this.group.controls["javaMinorVersion"].markAsDirty();
+      (<FormGroup>this.group.controls["javaMinorVersion"]).controls["value"].markAsDirty();
     }
 
     //WebContainer
@@ -522,7 +522,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       else{
         this.group.addControl("javaWebContainer", javaWebContainerGroup);
       }
-      this.group.controls["javaWebContainer"].markAsDirty();
+      (<FormGroup>this.group.controls["javaWebContainer"]).controls["value"].markAsDirty();
     }
 
   }

@@ -283,7 +283,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       value: defaultValue
     });
     (<any>netFrameWorkVersionGroup).options = netFrameworkVersionOptions;
-    (<any>netFrameWorkVersionGroup).friendlyName = ".NET Framework version";
     (<any>netFrameWorkVersionGroup).timeStamp = new Date(); //for debugging
 
     return netFrameWorkVersionGroup;
@@ -310,7 +309,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       value: defaultValue
     });
     (<any>phpVersionGroup).options = phpVersionOptions;
-    (<any>phpVersionGroup).friendlyName = "PHP version";
     (<any>phpVersionGroup).timeStamp = new Date(); //for debugging
 
     return phpVersionGroup;
@@ -337,7 +335,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       value: defaultValue
     });
     (<any>pythonVersionGroup).options = pythonVersionOptions;
-    (<any>pythonVersionGroup).friendlyName = "Python version";
     (<any>pythonVersionGroup).timeStamp = new Date(); //for debugging
 
     return pythonVersionGroup;
@@ -389,7 +386,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       value: defaultJavaVersion
     });
     (<any>javaVersionGroup).options = javaVersionOptions;
-    (<any>javaVersionGroup).friendlyName = "Java version";
     (<any>javaVersionGroup).timeStamp = new Date(); //for debugging
 
     //MinorVersion
@@ -410,7 +406,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       value: defaultJavaMinorVersion
     });
     (<any>javaMinorVersionGroup).options = javaMinorVersionOptions;
-    (<any>javaMinorVersionGroup).friendlyName = "Java minor version";
     (<any>javaMinorVersionGroup).timeStamp = new Date(); //for debugging
 
 
@@ -438,7 +433,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       value: defaultJavaWebContainer
     });
     (<any>javaWebContainerGroup).options = javaWebContainerOptions;
-    (<any>javaWebContainerGroup).friendlyName = "Web container";
     (<any>javaWebContainerGroup).timeStamp = new Date(); //for debugging
 
     return {
@@ -496,7 +490,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         value: defaultJavaMinorVersion
       });
       (<any>javaMinorVersionGroup).options = javaMinorVersionOptions;
-      (<any>javaMinorVersionGroup).friendlyName = "Java minor version";
       (<any>javaMinorVersionGroup).timeStamp = new Date(); //for debugging
 
       if(this.group.contains("javaMinorVersion")){
@@ -514,7 +507,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         value: defaultJavaWebContainer
       });
       (<any>javaWebContainerGroup).options = javaWebContainerOptions;
-      (<any>javaWebContainerGroup).friendlyName = "Web container";
       (<any>javaWebContainerGroup).timeStamp = new Date(); //for debugging
 
       if(this.group.contains("javaWebContainer")){

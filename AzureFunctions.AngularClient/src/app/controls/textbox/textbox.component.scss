@@ -9,6 +9,17 @@
         width: 100%;
     }
 
+/*
+    //shading
+    input{
+        border-color: black;
+        background-color: rgba(188, 188, 188, 0.7);
+    }
+    input:focus{
+        border-color: $primary-color;
+    }
+*/
+
     .validation-error{
         position: absolute;
         top: 0px;

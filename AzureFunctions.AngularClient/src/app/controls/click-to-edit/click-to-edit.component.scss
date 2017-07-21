@@ -1,6 +1,10 @@
 @import '../../../sass/main';
 
 .click-to-edit-wrapper{
+    display: inline-block;
+    width: 100%;
+    vertical-align: middle;
+
     .hidden{
         visibility: hidden;
     }
@@ -12,7 +16,9 @@
     .text{
         overflow: hidden;
         text-overflow: ellipsis;
-        padding: 3px;
+        padding-top: 1px;
+        padding-left: 6px;
+        padding-right: 6px;
         white-space: nowrap;
     }
 

@@ -23,7 +23,7 @@ import { RequiredValidator } from 'app/shared/validators/requiredValidator';
 @Component({
   selector: 'app-settings',
   templateUrl: './app-settings.component.html',
-  styleUrls: ['./app-settings.component.scss']
+  styleUrls: ['./../site-config.component.scss']
 })
 export class AppSettingsComponent implements OnChanges, OnDestroy {
   public debug = false; //for debugging

@@ -5,11 +5,11 @@ import { Subject } from 'rxjs/Subject';
 import { Subscription as RxSubscription } from 'rxjs/Subscription';
 import { TranslateService } from '@ngx-translate/core';
 
-import { SaveResult } from './../site-config.component';
 import { ConnectionStrings, ConnectionStringType } from './../../../shared/models/arm/connection-strings';
+import { EnumEx } from './../../../shared/Utilities/enumEx';
+import { SaveResult } from './../site-config.component';
 import { AiService } from './../../../shared/services/ai.service';
 import { PortalResources } from './../../../shared/models/portal-resources';
-import { EnumEx } from './../../../shared/Utilities/enumEx';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
 import { BusyStateComponent } from './../../../busy-state/busy-state.component';
 import { BusyStateScopeManager } from './../../../busy-state/busy-state-scope-manager';
@@ -22,11 +22,10 @@ import { AuthzService } from './../../../shared/services/authz.service';
 import { UniqueValidator } from 'app/shared/validators/uniqueValidator';
 import { RequiredValidator } from 'app/shared/validators/requiredValidator';
 
-
 @Component({
   selector: 'connection-strings',
   templateUrl: './connection-strings.component.html',
-  styleUrls: ['./connection-strings.component.scss']
+  styleUrls: ['./../site-config.component.scss']
 })
 export class ConnectionStringsComponent implements OnChanges, OnDestroy {
   public Resources = PortalResources;

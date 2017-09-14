@@ -346,6 +346,21 @@
   <data name="hiddenValueClickToShow" xml:space="preserve">
     <value>Hidden value.  Click to show.</value>
   </data>
+  <data name="nameHeading" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="valueHeading" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="typeHeading" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="slotSettingHeading" xml:space="preserve">
+    <value>Slot setting</value>
+  </data>
+  <data name="deleteHeading" xml:space="preserve">
+    <value>Delete</value>
+  </data>
   <data name="sideBar_changeMade" xml:space="preserve">
     <value>Changes made to function {{name}} will be lost. Are you sure you want to continue?</value>
   </data>

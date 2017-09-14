@@ -78,6 +78,11 @@ export class PortalResources
     public static enterName: string = "enterName";
     public static enterValue: string = "enterValue";
     public static hiddenValueClickToShow: string = "hiddenValueClickToShow";
+    public static nameHeading: string = "nameHeading";
+    public static valueHeading: string = "valueHeading";
+    public static typeHeading: string = "typeHeading";
+    public static slotSettingHeading: string = "slotSettingHeading";
+    public static deleteHeading: string = "deleteHeading";
     public static sideBar_changeMade: string = "sideBar_changeMade";
     public static sideBar_newFunction: string = "sideBar_newFunction";
     public static sideBar_refresh: string = "sideBar_refresh";

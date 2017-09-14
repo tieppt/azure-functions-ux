@@ -6,10 +6,10 @@
 
     <tbl tblClass="tbl fixed stretch">
       <tr class="header-row">
-        <th class="nameCol"></th>
-        <th class="valueCol"></th>
-        <th class="typeCol"></th>
-        <th class="actionCol"></th>
+        <th class="nameCol">{{ 'nameHeading' | translate }}</th>
+        <th class="valueCol">{{ 'valueHeading' | translate }}</th>
+        <th class="typeCol">{{ 'typeHeading' | translate }}</th>
+        <th class="actionCol"><!--{{ 'deleteHeading' | translate }}--></th>
       </tr>
 
       <tr *ngFor="let row of [1]">
@@ -45,10 +45,10 @@
 
     <tbl tblClass="tbl fixed stretch" [items]="groupArray.controls" #connectionStringsTable>
       <tr class="header-row">
-        <th class="nameCol"></th>
-        <th class="valueCol"></th>
-        <th class="typeCol"></th>
-        <th class="actionCol"></th>
+        <th class="nameCol"><tbl-th name="name">{{ 'nameHeading' | translate }}</tbl-th></th>
+        <th class="valueCol"><tbl-th name="value">{{ 'valueHeading' | translate }}</tbl-th></th>
+        <th class="typeCol"><tbl-th name="type">{{ 'typeHeading' | translate }}</tbl-th></th>
+        <th class="actionCol"><!--{{ 'deleteHeading' | translate }}--></th>
       </tr>
 
       <tr *ngFor="let group of connectionStringsTable.items">

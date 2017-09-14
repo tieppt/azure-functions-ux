@@ -3688,6 +3688,51 @@ namespace AzureFunctions.ResourcesPortal {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name
+        /// </summary>
+        internal static string nameHeading {
+            get {
+                return ResourceManager.GetString("nameHeading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value
+        /// </summary>
+        internal static string valueHeading {
+            get {
+                return ResourceManager.GetString("valueHeading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type
+        /// </summary>
+        internal static string typeHeading {
+            get {
+                return ResourceManager.GetString("typeHeading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slot setting
+        /// </summary>
+        internal static string slotSettingHeading {
+            get {
+                return ResourceManager.GetString("slotSettingHeading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete
+        /// </summary>
+        internal static string deleteHeading {
+            get {
+                return ResourceManager.GetString("deleteHeading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add header.
         /// </summary>
         internal static string httpRun_addHeader {

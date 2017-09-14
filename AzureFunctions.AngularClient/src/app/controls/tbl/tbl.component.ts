@@ -1,7 +1,7 @@
 import { Dom } from './../../shared/Utilities/dom';
 import { KeyCodes } from './../../shared/models/constants';
 import { TblThComponent } from './tbl-th/tbl-th.component';
-import { Input, OnChanges, SimpleChange, ElementRef, ViewChild, ContentChildren, QueryList } from '@angular/core';
+import { Input, OnChanges, SimpleChange, ElementRef, ViewChild, ContentChildren, QueryList, EventEmitter, Output } from '@angular/core';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 export interface TableItem {
@@ -32,6 +32,8 @@ export class TblComponent implements OnInit, OnChanges {
   @Input() groupColName: string | null;
   @ContentChildren(forwardRef(() => TblThComponent)) headers: QueryList<TblThComponent>;
 
+  @Output() contentReset: EventEmitter<void>;
+
   @ViewChild('tbl') table: ElementRef;
 
   public sortedColName: string;
@@ -45,6 +47,7 @@ export class TblComponent implements OnInit, OnChanges {
   private _focusedCellIndex = -1;
 
   constructor() {
+    this.contentReset = new EventEmitter<void>();
   }
 
   ngOnInit() {
@@ -71,6 +74,7 @@ export class TblComponent implements OnInit, OnChanges {
         }
       }
 
+      this.contentReset.emit();
     }
   }
 

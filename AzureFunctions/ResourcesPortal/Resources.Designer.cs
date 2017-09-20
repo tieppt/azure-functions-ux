@@ -205,6 +205,15 @@ namespace AzureFunctions.ResourcesPortal {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to + Add new document.
+        /// </summary>
+        internal static string addNewDocument {
+            get {
+                return ResourceManager.GetString("addNewDocument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to + Add new connection string.
         /// </summary>
         internal static string addNewConnectionString {

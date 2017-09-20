@@ -44,7 +44,7 @@ export class AppModule {
     declarations: [
       AppComponent,
       ErrorListComponent,
-      DisabledDashboardComponent,
+      DisabledDashboardComponent
     ],
     imports: [
       SharedModule.forRoot(),

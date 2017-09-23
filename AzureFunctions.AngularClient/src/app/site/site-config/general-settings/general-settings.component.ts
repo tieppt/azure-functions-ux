@@ -802,7 +802,9 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
 
     if (this.mainForm.contains("generalSettings") && this.mainForm.controls["generalSettings"].valid) {
       // level: site
-      const siteConfigArm: ArmObj<Site> = JSON.parse(JSON.stringify(this._siteConfigArm));
+      const siteConfigArm: ArmObj<any> = JSON.parse(JSON.stringify(this._siteConfigArm));
+      siteConfigArm.properties = {};
+
       if (this.clientAffinitySupported) {
         const clientAffinityEnabled = <boolean>(generalSettingsControls['clientAffinityEnabled'].value);
         siteConfigArm.properties.clientAffinityEnabled = clientAffinityEnabled;
@@ -814,7 +816,8 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       }
 
       // level: site/config/web
-      const webConfigArm: ArmObj<SiteConfig> = JSON.parse(JSON.stringify(this._webConfigArm));
+      const webConfigArm: ArmObj<any> = JSON.parse(JSON.stringify(this._webConfigArm));
+      webConfigArm.properties = {};
 
       // -- non-stack settings --
       if (this.platform64BitSupported) {

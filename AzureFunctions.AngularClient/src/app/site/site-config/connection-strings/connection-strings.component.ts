@@ -6,6 +6,7 @@ import { Subject } from 'rxjs/Subject';
 import { Subscription as RxSubscription } from 'rxjs/Subscription';
 import { TranslateService } from '@ngx-translate/core';
 
+import { SlotConfigNames } from './../../../shared/models/arm/slot-config-names';
 import { ConnectionStrings, ConnectionStringType } from './../../../shared/models/arm/connection-strings';
 import { EnumEx } from './../../../shared/Utilities/enumEx';
 import { SaveOrValidationResult } from './../site-config.component';
@@ -45,6 +46,7 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
   private _uniqueCsValidator: UniqueValidator;
 
   private _connectionStringsArm: ArmObj<ConnectionStrings>;
+  private _slotConfigNamesArm: ArmObj<SlotConfigNames>;
   public connectionStringTypes: DropDownElement<ConnectionStringType>[];
 
   public loadingFailureMessage: string;
@@ -53,6 +55,7 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
   @Input() mainForm: FormGroup;
 
   @Input() resourceId: string;
+  private _slotConfigNamesUri: string;
 
   constructor(
     private _cacheService: CacheService,
@@ -74,8 +77,10 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
         this._busyStateScopeManager.setBusy();
         this._saveError = null;
         this._connectionStringsArm = null;
+        this._slotConfigNamesArm = null;
         this.groupArray = null;
         this._resetPermissionsAndLoadingState();
+        this._setSlotConfigNamesUri();
         return Observable.zip(
           this._authZService.hasPermission(this.resourceId, [AuthzService.writeScope]),
           this._authZService.hasReadOnlyLock(this.resourceId),
@@ -88,12 +93,14 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
           Observable.of(this.hasWritePermissions),
           this.hasWritePermissions ?
             this._cacheService.postArm(`${this.resourceId}/config/connectionstrings/list`, true) : Observable.of(null),
-          (h, c) => ({ hasWritePermissions: h, connectionStringsResponse: c })
+          this.hasWritePermissions ?
+            this._cacheService.getArm(this._slotConfigNamesUri, true) : Observable.of(null),
+          (h, c, s) => ({ hasWritePermissions: h, connectionStringsResponse: c, slotConfigNamesResponse: s })
         )
       })
       .do(null, error => {
         this._aiService.trackEvent("/errors/connection-strings", error);
-        this._setupForm(this._connectionStringsArm);
+        this._setupForm(this._connectionStringsArm, this._slotConfigNamesArm);
         this.loadingFailureMessage = this._translateService.instant(PortalResources.configLoadFailure);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -103,7 +110,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
       .subscribe(r => {
         if (r.hasWritePermissions) {
           this._connectionStringsArm = r.connectionStringsResponse.json();
-          this._setupForm(this._connectionStringsArm);
+          this._slotConfigNamesArm = r.slotConfigNamesResponse.json();
+          this._setupForm(this._connectionStringsArm, this._slotConfigNamesArm);
         }
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -116,7 +124,7 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
       this._resourceIdStream.next(this.resourceId);
     }
     if (changes['mainForm'] && !changes['resourceId']) {
-      this._setupForm(this._connectionStringsArm);
+      this._setupForm(this._connectionStringsArm, this._slotConfigNamesArm);
     }
   }
 
@@ -125,6 +133,16 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
       this._resourceIdSubscription.unsubscribe(); this._resourceIdSubscription = null;
     }
     this._busyStateScopeManager.dispose();
+  }
+
+  private _setSlotConfigNamesUri() {
+    let baseUri = this.resourceId;
+
+    const index = this.resourceId.indexOf('/slots/');
+    if (index !== -1) {
+      baseUri = this.resourceId.substr(0, index);
+    }
+    this._slotConfigNamesUri = baseUri + '/config/slotConfigNames';
   }
 
   private _resetPermissionsAndLoadingState() {
@@ -147,8 +165,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
     this.hasWritePermissions = writePermission && !readOnlyLock;
   }
 
-  private _setupForm(connectionStringsArm: ArmObj<ConnectionStrings>) {
-    if (!!connectionStringsArm) {
+  private _setupForm(connectionStringsArm: ArmObj<ConnectionStrings>, slotConfigNamesArm: ArmObj<SlotConfigNames>) {
+    if (!!connectionStringsArm && !!slotConfigNamesArm) {
       if (!this._saveError || !this.groupArray) {
         this.groupArray = this._fb.array([]);
 
@@ -158,6 +176,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
           "name",
           this.groupArray,
           this._translateService.instant(PortalResources.validation_duplicateError));
+
+        const stickConnectionStringNames = slotConfigNamesArm.properties.connectionStringNames || [];
 
         for (let name in connectionStringsArm.properties) {
           if (connectionStringsArm.properties.hasOwnProperty(name)) {
@@ -172,7 +192,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
                   this._requiredValidator.validate.bind(this._requiredValidator),
                   this._uniqueCsValidator.validate.bind(this._uniqueCsValidator)])],
               value: [connectionString.value],
-              type: [connectionStringDropDownTypes.find(t => t.default).value]
+              type: [connectionStringDropDownTypes.find(t => t.default).value],
+              isSlotSetting: [stickConnectionStringNames.includes(name)]
             });
 
             (<any>group).csTypes = connectionStringDropDownTypes;
@@ -222,6 +243,14 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
       let connectionStringsArm: ArmObj<any> = JSON.parse(JSON.stringify(this._connectionStringsArm));
       connectionStringsArm.properties = {};
 
+      let slotConfigNamesArm: ArmObj<any> = JSON.parse(JSON.stringify(this._slotConfigNamesArm));
+      delete slotConfigNamesArm.properties.appSettingNames;
+      slotConfigNamesArm.properties.connectionStringNames = slotConfigNamesArm.properties.connectionStringNames || [];
+      let connectionStringNames = slotConfigNamesArm.properties.connectionStringNames as string[];
+      
+      // TEMPORARY MITIGATION: Only do PUT on slotConfiNames API if there have been changes.
+      let connectionStringNamesModified = false;
+
       for (let i = 0; i < connectionStringGroups.length; i++) {
         let connectionStringControl = connectionStringGroups[i];
         let connectionString = {
@@ -229,12 +258,35 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
           type: ConnectionStringType[connectionStringControl.value.type]
         }
 
-        connectionStringsArm.properties[connectionStringGroups[i].value.name] = connectionString;
+        let name = connectionStringGroups[i].value.name;
+
+        connectionStringsArm.properties[name] = connectionString;
+
+        if (connectionStringGroups[i].value.isSlotSetting) {
+          if (!connectionStringNames.includes(name)) {
+            connectionStringNames.push(name);
+            connectionStringNamesModified = true;
+          }
+        }
+        else {
+          let index = connectionStringNames.indexOf(name);
+          if (index !== -1) {
+            connectionStringNames.splice(index, 1);
+            connectionStringNamesModified = true;
+          }
+        }
       }
 
-      return this._cacheService.putArm(`${this.resourceId}/config/connectionstrings`, null, connectionStringsArm)
-        .map(connectionStringsResponse => {
-          this._connectionStringsArm = connectionStringsResponse.json();
+      return Observable.zip(
+        this._cacheService.putArm(`${this.resourceId}/config/connectionstrings`, null, connectionStringsArm),
+        // TEMPORARY MITIGATION: Only do PUT on slotConfiNames API if there have been changes.
+        connectionStringNamesModified ? this._cacheService.putArm(this._slotConfigNamesUri, null, slotConfigNamesArm): Observable.of(null),
+        Observable.of(connectionStringNamesModified),
+        (c, s, m) => ({ connectionStringsResponse: c, slotConfigNamesResponse: s, connectionStringNamesModified: m })
+      )
+        .map(r => {
+          this._connectionStringsArm = r.connectionStringsResponse.json();
+          this._slotConfigNamesArm = r.connectionStringNamesModified ? r.slotConfigNamesResponse.json() : this._slotConfigNamesArm;
           return {
             success: true,
             error: null
@@ -284,7 +336,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
           this._requiredValidator.validate.bind(this._requiredValidator),
           this._uniqueCsValidator.validate.bind(this._uniqueCsValidator)])],
       value: [null],
-      type: [connectionStringDropDownTypes.find(t => t.default).value]
+      type: [connectionStringDropDownTypes.find(t => t.default).value],
+      isSlotSetting: [false]
     });
 
     (<CustomFormGroup>group)._msStartInEditMode = true;

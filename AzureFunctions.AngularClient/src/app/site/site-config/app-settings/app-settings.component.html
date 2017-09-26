@@ -9,6 +9,7 @@
       <!--<tr class="header-row">
         <th class="one-third-col padded-col"></th>
         <th class="two-thirds-col padded-col"></th>
+        <th class="slot-setting-col padded-col"></th>
         <th class="action-col"></th>
       </tr>-->
 
@@ -29,6 +30,13 @@
             <textbox [control]="group.controls['value']" [placeholder]="Resources.enterValue | translate"></textbox>
 
           </click-to-edit>
+        </td>
+        
+        <td class="slot-setting-col padded-col">
+          <label>
+            <input [formControl]="group.controls['isSlotSetting']" type="checkbox">
+            {{ 'isSlotSetting' | translate }}
+          </label>
         </td>
 
         <td class="action-col">

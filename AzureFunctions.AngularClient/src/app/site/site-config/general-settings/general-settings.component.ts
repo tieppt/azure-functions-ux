@@ -80,6 +80,10 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
   public remoteDebuggingSupported = false;
   public clientAffinitySupported = false;
 
+  public autoSwapSupported = false;
+  public autoSwapEnabledOptions: SelectOption<boolean>[];
+  public autoSwapSlotNameOptions: DropDownElement<string>[];
+
   public linuxRuntimeSupported = false;
   public linuxFxVersionOptions: DropDownGroupElement<string>[];
   private _linuxFxVersionOptionsClean: DropDownGroupElement<string>[];
@@ -88,6 +92,10 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
   @Input() mainForm: FormGroup;
 
   @Input() resourceId: string;
+
+  private _slotsConfigUri: string;
+  private _slotsConfigArm: ArmArrayResult<Site>;
+  public isProductionSlot: boolean;
 
   private _ignoreChildEvents = true;
 
@@ -101,6 +109,8 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
   ) {
     this._busyState = siteTabComponent.busyState;
     this._busyStateScopeManager = this._busyState.getScopeManager();
+
+    this._resetSlotsInfo();
 
     this._resetPermissionsAndLoadingState();
 
@@ -117,6 +127,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         this.group = null;
         this.versionOptionsMap = null;
         this._ignoreChildEvents = true;
+        this._resetSlotsInfo();
         this._resetSupportedControls();
         this._resetPermissionsAndLoadingState();
         return Observable.zip(
@@ -130,14 +141,21 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         return Observable.zip(
           Observable.of(this.hasWritePermissions),
           this._cacheService.getArm(`${this.resourceId}`, true),
+          this._cacheService.getArm(this._slotsConfigUri, true),
           this._cacheService.getArm(`${this.resourceId}/config/web`, true),
           this._cacheService.getArm(`/providers/Microsoft.Web/availablestacks`),
-          (h, c, w, s) => ({ hasWritePermissions: h, siteConfigResponse: c, webConfigResponse: w, availableStacksResponse: s })
+          (h, c, t, w, s) => ({
+            hasWritePermissions: h,
+            siteConfigResponse: c,
+            slotsConfigResponse: t,
+            webConfigResponse: w,
+            availableStacksResponse: s
+          })
         );
       })
       .do(null, error => {
         this._aiService.trackEvent('/errors/general-settings', error);
-        this._setupForm(this._webConfigArm, this._siteConfigArm);
+        this._setupForm(this._webConfigArm, this._siteConfigArm, this._slotsConfigArm);
         this.loadingFailureMessage = this._translateService.instant(PortalResources.configLoadFailure);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -147,6 +165,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       .subscribe(r => {
         this._siteConfigArm = r.siteConfigResponse.json();
         this._webConfigArm = r.webConfigResponse.json();
+        this._slotsConfigArm = r.slotsConfigResponse.json();
         const availableStacksArm = r.availableStacksResponse.json();
         if (!this._versionOptionsMapClean) {
           this._parseAvailableStacks(availableStacksArm);
@@ -154,8 +173,8 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         if (!this._linuxFxVersionOptionsClean) {
           this._parseLinuxBuiltInStacks(LinuxConstants.builtInStacks);
         }
-        this._processSupportedControls(this._siteConfigArm, this._webConfigArm);
-        this._setupForm(this._webConfigArm, this._siteConfigArm);
+        this._processSupportedControls(this._siteConfigArm, this._webConfigArm, this._slotsConfigArm);
+        this._setupForm(this._webConfigArm, this._siteConfigArm, this._slotsConfigArm);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
         this._busyStateScopeManager.clearBusy();
@@ -167,7 +186,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       this._resourceIdStream.next(this.resourceId);
     }
     if (changes['mainForm'] && !changes['resourceId']) {
-      this._setupForm(this._webConfigArm, this._siteConfigArm);
+      this._setupForm(this._webConfigArm, this._siteConfigArm, this._slotsConfigArm);
     }
   }
 
@@ -176,6 +195,23 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       this._resourceIdSubscription.unsubscribe(); this._resourceIdSubscription = null;
     }
     this._busyStateScopeManager.dispose();
+  }
+
+  private _resetSlotsInfo() {
+    this._slotsConfigUri = null;
+    this._slotsConfigArm = null;
+    this.isProductionSlot = true;
+
+    if (this.resourceId) {
+      let baseUri = this.resourceId;
+
+      const index = this.resourceId.indexOf('/slots/');
+      if (index !== -1) {
+        baseUri = this.resourceId.substr(0, index);
+        this.isProductionSlot = false;
+      }
+      this._slotsConfigUri = baseUri + '/slots';
+    }
   }
 
   private _resetPermissionsAndLoadingState() {
@@ -210,10 +246,11 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
     this.classicPipelineModeSupported = false;
     this.remoteDebuggingSupported = false;
     this.clientAffinitySupported = false;
+    this.autoSwapSupported = false;
     this.linuxRuntimeSupported = false;
   }
 
-  private _processSupportedControls(siteConfigArm: ArmObj<Site>, webConfigArm: ArmObj<SiteConfig>) {
+  private _processSupportedControls(siteConfigArm: ArmObj<Site>, webConfigArm: ArmObj<SiteConfig>, slotsConfigArm: ArmArrayResult<Site>) {
     if (!!siteConfigArm) {
       let netFrameworkSupported = true;
       let phpSupported = true;
@@ -225,10 +262,15 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       let classicPipelineModeSupported = true;
       let remoteDebuggingSupported = true;
       let clientAffinitySupported = true;
+      let autoSwapSupported = false;
       let linuxRuntimeSupported = false;
 
       this._sku = siteConfigArm.properties.sku;
       this._kind = siteConfigArm.kind;
+
+      if (slotsConfigArm && slotsConfigArm.value && slotsConfigArm.value.length > 0) {
+        autoSwapSupported = true;
+      }
 
       if (this._kind.indexOf('linux') >= 0) {
         netFrameworkSupported = false;
@@ -243,6 +285,8 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         if ((webConfigArm.properties.linuxFxVersion || '').indexOf(LinuxConstants.dockerPrefix) === -1) {
           linuxRuntimeSupported = true;
         }
+
+        autoSwapSupported = false;
       }
 
       if (this._kind === 'functionapp') {
@@ -274,12 +318,13 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       this.classicPipelineModeSupported = classicPipelineModeSupported;
       this.remoteDebuggingSupported = remoteDebuggingSupported;
       this.clientAffinitySupported = clientAffinitySupported;
+      this.autoSwapSupported = autoSwapSupported;
       this.linuxRuntimeSupported = linuxRuntimeSupported;
     }
   }
 
-  private _setupForm(webConfigArm: ArmObj<SiteConfig>, siteConfigArm: ArmObj<Site>) {
-    if (!!webConfigArm && !!siteConfigArm) {
+  private _setupForm(webConfigArm: ArmObj<SiteConfig>, siteConfigArm: ArmObj<Site>, slotsConfigArm: ArmArrayResult<Site>) {
+    if (!!webConfigArm && !!siteConfigArm && !!slotsConfigArm) {
 
       this._ignoreChildEvents = true;
 
@@ -287,6 +332,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         const group = this._fb.group({});
         const versionOptionsMap: { [key: string]: DropDownElement<string>[] } = {};
         const linuxFxVersionOptions: DropDownGroupElement<string>[] = [];
+        const autoSwapSlotNameOptions: DropDownElement<string>[] = [];
 
         this._setupNetFramworkVersion(group, versionOptionsMap, webConfigArm.properties.netFrameworkVersion);
         this._setupPhpVersion(group, versionOptionsMap, webConfigArm.properties.phpVersion);
@@ -294,11 +340,14 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         this._setupJava(group, versionOptionsMap, webConfigArm.properties.javaVersion, webConfigArm.properties.javaContainer, webConfigArm.properties.javaContainerVersion);
         this._setupGeneralSettings(group, webConfigArm, siteConfigArm);
 
+        this._setupAutoSwapSettings(group, autoSwapSlotNameOptions, webConfigArm, siteConfigArm, slotsConfigArm);
+
         this._setupLinux(group, linuxFxVersionOptions, webConfigArm.properties.linuxFxVersion, webConfigArm.properties.appCommandLine);
 
         this.group = group;
         this.versionOptionsMap = versionOptionsMap;
         this.linuxFxVersionOptions = linuxFxVersionOptions;
+        this.autoSwapSlotNameOptions = autoSwapSlotNameOptions;
 
       }
 
@@ -387,6 +436,10 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       { displayLabel: '2013', value: 'VS2013' },
       { displayLabel: '2015', value: 'VS2015' },
       { displayLabel: '2017', value: 'VS2017' }];
+
+    this.autoSwapEnabledOptions =
+      [{ displayLabel: offString, value: false },
+      { displayLabel: onString, value: true }];
   }
 
   private _setupGeneralSettings(group: FormGroup, webConfigArm: ArmObj<SiteConfig>, siteConfigArm: ArmObj<Site>) {
@@ -415,6 +468,50 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
   public updateRemoteDebuggingVersionOptions(enabled: boolean) {
     if (!this._ignoreChildEvents) {
       this._setControlsEnabledState(['remoteDebuggingVersion'], enabled);
+    }
+  }
+
+  private _setupAutoSwapSettings(
+    group: FormGroup,
+    autoSwapSlotNameOptions: DropDownElement<string>[],
+    webConfigArm: ArmObj<SiteConfig>,
+    siteConfigArm: ArmObj<Site>,
+    slotsConfigArm: ArmArrayResult<Site>
+  ) {
+    if (this.autoSwapSupported) {
+      if (this.isProductionSlot) {
+        group.addControl('autoSwapEnabled', this._fb.control(false));
+        group.addControl('autoSwapSlotName', this._fb.control(null));
+        setTimeout(() => { this._setControlsEnabledState(['autoSwapEnabled', 'autoSwapSlotName'], false); }, 0);
+      }
+      else {
+        const slotNames: string[] = ['production'];
+        slotsConfigArm.value
+          .map(s => s.name)
+          .filter(r => r !== siteConfigArm.name)
+          .forEach(n => slotNames.push(n.split("/").slice(-1)[0]))
+
+        slotNames.forEach(name => {
+          autoSwapSlotNameOptions.push({
+            displayLabel: name,
+            value: name,
+            default: name === webConfigArm.properties.autoSwapSlotName
+          });
+        })
+
+        group.addControl('autoSwapEnabled', this._fb.control(!!webConfigArm.properties.autoSwapSlotName));
+        group.addControl('autoSwapSlotName', this._fb.control(webConfigArm.properties.autoSwapSlotName));
+        setTimeout(() => { this._setControlsEnabledState(['autoSwapSlotName'], !!webConfigArm.properties.autoSwapSlotName); }, 0);
+      }
+    }
+  }
+
+  public updateAutoSwapSlotNameOptions(enabled: boolean) {
+    if (!this._ignoreChildEvents) {
+      this._setControlsEnabledState(['autoSwapSlotName'], enabled);
+      setTimeout(() => {
+        this.group.controls['autoSwapSlotName'].markAsDirty();
+      }, 0);
     }
   }
 
@@ -872,7 +969,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
 
           const match = element.value === linuxFxVersion || (!element.value && !linuxFxVersion);
           defaultFxVersionValue = match ? element.value : defaultFxVersionValue;
-  
+
           dropDownGroupElement.dropDownElements.push({
             displayLabel: element.displayLabel,
             value: element.value,
@@ -944,6 +1041,10 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       if (this.remoteDebuggingSupported) {
         webConfigArm.properties.remoteDebuggingEnabled = <boolean>(generalSettingsControls['remoteDebuggingEnabled'].value);
         webConfigArm.properties.remoteDebuggingVersion = <string>(generalSettingsControls['remoteDebuggingVersion'].value);
+      }
+      if (this.autoSwapSupported) {
+        const autoSwapEnabled = <boolean>(generalSettingsControls['autoSwapEnabled'].value);
+        webConfigArm.properties.autoSwapSlotName = autoSwapEnabled ? <string>(generalSettingsControls['autoSwapSlotName'].value) : '';
       }
 
       // -- stacks settings --

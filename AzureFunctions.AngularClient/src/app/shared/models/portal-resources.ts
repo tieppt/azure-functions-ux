@@ -391,11 +391,11 @@ export class PortalResources
     public static feature_autoSwapSettingsName: string = "feature_autoSwapSettingsName";
     public static feature_debuggingSettingsName: string = "feature_debuggingSettingsName";
     public static feature_linuxRuntimeName: string = "feature_linuxRuntimeName";
+    public static feature_applicationSettingsName: string = "feature_applicationSettingsName";
+    public static feature_applicationSettingsInfo: string = "feature_applicationSettingsInfo";
     public static feature_defaultDocumentsName: string = "feature_defaultDocumentsName";
     public static feature_handlerMappingsName: string = "feature_handlerMappingsName";
     public static feature_virtualDirectoriesName: string = "feature_virtualDirectoriesName";
-    public static feature_applicationSettingsName: string = "feature_applicationSettingsName";
-    public static feature_applicationSettingsInfo: string = "feature_applicationSettingsInfo";
     public static configRequiresWritePermissionOnApp: string = "configRequiresWritePermissionOnApp";
     public static configDisabledReadOnlyLockOnApp: string = "configDisabledReadOnlyLockOnApp";
     public static configViewReadOnlySettings: string = "configViewReadOnlySettings";
@@ -754,8 +754,9 @@ export class PortalResources
     public static extension_integrate_warning: string = "extension_integrate_warning";
     public static extension_template_warning: string = "extension_template_warning";
     public static installingExtension: string = "installingExtension";
-    public static functionAppSettings_quotaPlaceHolder: string = "functionAppSettings_quotaPlaceHolder";
-    public static notificationHubPicker_notificationHub: string = "notificationHubPicker_notificationHub";
     public static failedToInstallFunctionRuntimeExtensionForId: string = "failedToInstallFunctionRuntimeExtensionForId";
+    public static functionAppSettings_quotaPlaceHolder: string = "functionAppSettings_quotaPlaceHolder";
+    public static notificationHubPicker_connection: string = "notificationHubPicker_connection";
+    public static notificationHubPicker_notificationHub: string = "notificationHubPicker_notificationHub";
 }
 

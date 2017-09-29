@@ -183,6 +183,13 @@ export class SiteConfigComponent implements OnDestroy {
             })
           );
         })
+        .do(null, error => {
+          this._aiService.trackEvent('/errors/site-config', error);
+          this._busyStateScopeManager.clearBusy();
+          this._setupForm(true /*retain dirty state*/);
+          this.mainForm.markAsDirty();
+          this._portalService.stopNotification(notificationId, false, '');
+        })
         .subscribe(r => {
           this._busyStateScopeManager.clearBusy();
 

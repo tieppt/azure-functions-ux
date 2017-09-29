@@ -20,6 +20,7 @@ import { CustomFormControl } from './../../../controls/click-to-edit/click-to-ed
 import { ArmObj, ArmArrayResult } from './../../../shared/models/arm/arm-obj';
 import { CacheService } from './../../../shared/services/cache.service';
 import { AuthzService } from './../../../shared/services/authz.service';
+import { SiteDescriptor } from 'app/shared/resourceDescriptors';
 
 import { JavaWebContainerProperties } from './models/java-webcontainer-properties';
 
@@ -93,7 +94,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
 
   @Input() resourceId: string;
 
-  private _slotsConfigUri: string;
+  private _slotsConfigArmPath: string;
   private _slotsConfigArm: ArmArrayResult<Site>;
   public isProductionSlot: boolean;
 
@@ -141,7 +142,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
         return Observable.zip(
           Observable.of(this.hasWritePermissions),
           this._cacheService.getArm(`${this.resourceId}`, true),
-          this._cacheService.getArm(this._slotsConfigUri, true),
+          this._cacheService.getArm(this._slotsConfigArmPath, true),
           this._cacheService.getArm(`${this.resourceId}/config/web`, true),
           this._cacheService.getArm(`/providers/Microsoft.Web/availablestacks`),
           (h, c, t, w, s) => ({
@@ -155,7 +156,7 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       })
       .do(null, error => {
         this._aiService.trackEvent('/errors/general-settings', error);
-        this._setupForm(this._webConfigArm, this._siteConfigArm, this._slotsConfigArm);
+        this._setupForm(null, null, null);
         this.loadingFailureMessage = this._translateService.instant(PortalResources.configLoadFailure);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -192,25 +193,22 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._resourceIdSubscription) {
-      this._resourceIdSubscription.unsubscribe(); this._resourceIdSubscription = null;
+      this._resourceIdSubscription.unsubscribe();
+      this._resourceIdSubscription = null;
     }
     this._busyStateScopeManager.dispose();
   }
 
   private _resetSlotsInfo() {
-    this._slotsConfigUri = null;
+    this._slotsConfigArmPath = null;
     this._slotsConfigArm = null;
     this.isProductionSlot = true;
 
     if (this.resourceId) {
-      let baseUri = this.resourceId;
+      const siteDescriptor = new SiteDescriptor(this.resourceId);
 
-      const index = this.resourceId.indexOf('/slots/');
-      if (index !== -1) {
-        baseUri = this.resourceId.substr(0, index);
-        this.isProductionSlot = false;
-      }
-      this._slotsConfigUri = baseUri + '/slots';
+      this._slotsConfigArmPath = `${siteDescriptor.getSiteOnlyResourceId()}/slots`;
+      this.isProductionSlot = !siteDescriptor.slot;
     }
   }
 

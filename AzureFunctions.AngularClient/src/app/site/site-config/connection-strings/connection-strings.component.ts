@@ -10,7 +10,8 @@ import { SlotConfigNames } from './../../../shared/models/arm/slot-config-names'
 import { ConnectionStrings, ConnectionStringType } from './../../../shared/models/arm/connection-strings';
 import { EnumEx } from './../../../shared/Utilities/enumEx';
 import { SaveOrValidationResult } from './../site-config.component';
-import { AiService } from './../../../shared/services/ai.service';
+import { LogCategories } from 'app/shared/models/constants';
+import { LogService } from './../../../shared/services/log.service';
 import { PortalResources } from './../../../shared/models/portal-resources';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
 import { BusyStateComponent } from './../../../busy-state/busy-state.component';
@@ -19,6 +20,7 @@ import { CustomFormControl, CustomFormGroup } from './../../../controls/click-to
 import { ArmObj } from './../../../shared/models/arm/arm-obj';
 import { CacheService } from './../../../shared/services/cache.service';
 import { AuthzService } from './../../../shared/services/authz.service';
+import { SiteDescriptor } from 'app/shared/resourceDescriptors';
 import { UniqueValidator } from 'app/shared/validators/uniqueValidator';
 import { RequiredValidator } from 'app/shared/validators/requiredValidator';
 
@@ -55,13 +57,13 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
   @Input() mainForm: FormGroup;
 
   @Input() resourceId: string;
-  private _slotConfigNamesUri: string;
+  private _slotConfigNamesArmPath: string;
 
   constructor(
     private _cacheService: CacheService,
     private _fb: FormBuilder,
     private _translateService: TranslateService,
-    private _aiService: AiService,
+    private _logService: LogService,
     private _authZService: AuthzService,
     siteTabComponent: SiteTabComponent
   ) {
@@ -80,7 +82,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
         this._slotConfigNamesArm = null;
         this.groupArray = null;
         this._resetPermissionsAndLoadingState();
-        this._setSlotConfigNamesUri();
+        this._slotConfigNamesArmPath =
+          `${SiteDescriptor.getSiteDescriptor(this.resourceId).getSiteOnlyResourceId()}/config/slotConfigNames`;
         return Observable.zip(
           this._authZService.hasPermission(this.resourceId, [AuthzService.writeScope]),
           this._authZService.hasReadOnlyLock(this.resourceId),
@@ -94,13 +97,13 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
           this.hasWritePermissions ?
             this._cacheService.postArm(`${this.resourceId}/config/connectionstrings/list`, true) : Observable.of(null),
           this.hasWritePermissions ?
-            this._cacheService.getArm(this._slotConfigNamesUri, true) : Observable.of(null),
+            this._cacheService.getArm(this._slotConfigNamesArmPath, true) : Observable.of(null),
           (h, c, s) => ({ hasWritePermissions: h, connectionStringsResponse: c, slotConfigNamesResponse: s })
         )
       })
       .do(null, error => {
-        this._aiService.trackEvent("/errors/connection-strings", error);
-        this._setupForm(this._connectionStringsArm, this._slotConfigNamesArm);
+        this._logService.error(LogCategories.connectionStrings, '/connection-strings', error);
+        this._setupForm(null, null);
         this.loadingFailureMessage = this._translateService.instant(PortalResources.configLoadFailure);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -130,19 +133,10 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._resourceIdSubscription) {
-      this._resourceIdSubscription.unsubscribe(); this._resourceIdSubscription = null;
+      this._resourceIdSubscription.unsubscribe();
+      this._resourceIdSubscription = null;
     }
     this._busyStateScopeManager.dispose();
-  }
-
-  private _setSlotConfigNamesUri() {
-    let baseUri = this.resourceId;
-
-    const index = this.resourceId.indexOf('/slots/');
-    if (index !== -1) {
-      baseUri = this.resourceId.substr(0, index);
-    }
-    this._slotConfigNamesUri = baseUri + '/config/slotConfigNames';
   }
 
   private _resetPermissionsAndLoadingState() {
@@ -193,7 +187,7 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
                   this._uniqueCsValidator.validate.bind(this._uniqueCsValidator)])],
               value: [connectionString.value],
               type: [connectionStringDropDownTypes.find(t => t.default).value],
-              isSlotSetting: [stickConnectionStringNames.includes(name)]
+              isSlotSetting: [stickConnectionStringNames.indexOf(name) !== -1]
             });
 
             (<any>group).csTypes = connectionStringDropDownTypes;
@@ -263,7 +257,7 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
         connectionStringsArm.properties[name] = connectionString;
 
         if (connectionStringGroups[i].value.isSlotSetting) {
-          if (!connectionStringNames.includes(name)) {
+          if (connectionStringNames.indexOf(name) === -1) {
             connectionStringNames.push(name);
             connectionStringNamesModified = true;
           }
@@ -280,7 +274,7 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
       return Observable.zip(
         this._cacheService.putArm(`${this.resourceId}/config/connectionstrings`, null, connectionStringsArm),
         // TEMPORARY MITIGATION: Only do PUT on slotConfiNames API if there have been changes.
-        connectionStringNamesModified ? this._cacheService.putArm(this._slotConfigNamesUri, null, slotConfigNamesArm): Observable.of(null),
+        connectionStringNamesModified ? this._cacheService.putArm(this._slotConfigNamesArmPath, null, slotConfigNamesArm): Observable.of(null),
         Observable.of(connectionStringNamesModified),
         (c, s, m) => ({ connectionStringsResponse: c, slotConfigNamesResponse: s, connectionStringNamesModified: m })
       )

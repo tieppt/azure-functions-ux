@@ -18,7 +18,7 @@ export class UniqueValidator implements Validator {
         private _controlName: string,
         private _controlsArray: FormArray,
         private _error,
-        private _stringTransform: ((s: string) => string) = null ) {
+        private _stringTransform?: (s: string) => string ) {
     }
 
     validate(control: CustomFormControl) {

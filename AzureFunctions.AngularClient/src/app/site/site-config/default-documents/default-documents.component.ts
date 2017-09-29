@@ -8,7 +8,8 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { SiteConfig } from './../../../shared/models/arm/site-config'
 import { SaveOrValidationResult } from './../site-config.component';
-import { AiService } from './../../../shared/services/ai.service';
+import { LogCategories } from 'app/shared/models/constants';
+import { LogService } from './../../../shared/services/log.service';
 import { PortalResources } from './../../../shared/models/portal-resources';
 import { BusyStateComponent } from './../../../busy-state/busy-state.component';
 import { BusyStateScopeManager } from './../../../busy-state/busy-state-scope-manager';
@@ -25,8 +26,6 @@ import { RequiredValidator } from 'app/shared/validators/requiredValidator';
   styleUrls: ['./../site-config.component.scss']
 })
 export class DefaultDocumentsComponent implements OnChanges, OnDestroy {
-  public debug = false; //for debugging
-
   public Resources = PortalResources;
   public groupArray: FormArray;
 
@@ -58,7 +57,7 @@ export class DefaultDocumentsComponent implements OnChanges, OnDestroy {
     private _cacheService: CacheService,
     private _fb: FormBuilder,
     private _translateService: TranslateService,
-    private _aiService: AiService,
+    private _logService: LogService,
     private _authZService: AuthzService,
     siteTabComponent: SiteTabComponent
   ) {
@@ -91,8 +90,8 @@ export class DefaultDocumentsComponent implements OnChanges, OnDestroy {
         )
       })
       .do(null, error => {
-        this._aiService.trackEvent("/errors/default-documents", error);
-        this._setupForm(this._webConfigArm);
+        this._logService.error(LogCategories.defaultDocuments, '/default-documents', error);
+        this._setupForm(null);
         this.loadingFailureMessage = this._translateService.instant(PortalResources.configLoadFailure);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -119,7 +118,8 @@ export class DefaultDocumentsComponent implements OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._resourceIdSubscription) {
-      this._resourceIdSubscription.unsubscribe(); this._resourceIdSubscription = null;
+      this._resourceIdSubscription.unsubscribe();
+      this._resourceIdSubscription = null;
     }
     this._busyStateScopeManager.dispose();
   }

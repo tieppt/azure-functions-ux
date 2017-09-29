@@ -24,9 +24,7 @@ export class TextboxComponent implements OnInit {
 
   focus() {
     if (this.textboxInput) {
-      //setTimeout(() => {
-        this.textboxInput.nativeElement.focus();
-      //})
+      this.textboxInput.nativeElement.focus();
     }
   }
 }

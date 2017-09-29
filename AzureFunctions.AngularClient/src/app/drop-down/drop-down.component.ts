@@ -166,9 +166,7 @@ export class DropDownComponent<T> implements OnInit, OnChanges {
 
     focus() {
         if (this.selectInput) {
-            //setTimeout(() => {
             this.selectInput.nativeElement.focus();
-            //});
         }
     }
 

@@ -85,7 +85,7 @@ h3{
 }
 
 .auto-swap-warning{
-    border-left-color: rgb(228, 153, 55);
+    border-left-color: $warning-color;
     border-left-style: solid;
     border-left-width: 2px;
     padding-left: 8px;

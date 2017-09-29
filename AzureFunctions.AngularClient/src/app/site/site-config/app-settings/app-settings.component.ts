@@ -8,7 +8,8 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { SlotConfigNames } from './../../../shared/models/arm/slot-config-names';
 import { SaveOrValidationResult } from './../site-config.component';
-import { AiService } from './../../../shared/services/ai.service';
+import { LogCategories } from 'app/shared/models/constants';
+import { LogService } from './../../../shared/services/log.service';
 import { PortalResources } from './../../../shared/models/portal-resources';
 import { BusyStateComponent } from './../../../busy-state/busy-state.component';
 import { BusyStateScopeManager } from './../../../busy-state/busy-state-scope-manager';
@@ -16,6 +17,7 @@ import { CustomFormControl, CustomFormGroup } from './../../../controls/click-to
 import { ArmObj } from './../../../shared/models/arm/arm-obj';
 import { CacheService } from './../../../shared/services/cache.service';
 import { AuthzService } from './../../../shared/services/authz.service';
+import { SiteDescriptor } from 'app/shared/resourceDescriptors';
 import { UniqueValidator } from 'app/shared/validators/uniqueValidator';
 import { RequiredValidator } from 'app/shared/validators/requiredValidator';
 
@@ -25,8 +27,6 @@ import { RequiredValidator } from 'app/shared/validators/requiredValidator';
   styleUrls: ['./../site-config.component.scss']
 })
 export class AppSettingsComponent implements OnChanges, OnDestroy {
-  public debug = false; //for debugging
-
   public Resources = PortalResources;
   public groupArray: FormArray;
 
@@ -53,13 +53,13 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
   @Input() mainForm: FormGroup;
 
   @Input() resourceId: string;
-  private _slotConfigNamesUri: string;
+  private _slotConfigNamesArmPath: string;
 
   constructor(
     private _cacheService: CacheService,
     private _fb: FormBuilder,
     private _translateService: TranslateService,
-    private _aiService: AiService,
+    private _logService: LogService,
     private _authZService: AuthzService,
     siteTabComponent: SiteTabComponent
   ) {
@@ -78,7 +78,8 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
         this._slotConfigNamesArm = null;
         this.groupArray = null;
         this._resetPermissionsAndLoadingState();
-        this._setSlotConfigNamesUri();
+        this._slotConfigNamesArmPath =
+          `${SiteDescriptor.getSiteDescriptor(this.resourceId).getSiteOnlyResourceId()}/config/slotConfigNames`;
         return Observable.zip(
           this._authZService.hasPermission(this.resourceId, [AuthzService.writeScope]),
           this._authZService.hasReadOnlyLock(this.resourceId),
@@ -92,13 +93,13 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
           this.hasWritePermissions ?
             this._cacheService.postArm(`${this.resourceId}/config/appSettings/list`, true) : Observable.of(null),
           this.hasWritePermissions ?
-            this._cacheService.getArm(this._slotConfigNamesUri, true) : Observable.of(null),
+            this._cacheService.getArm(this._slotConfigNamesArmPath, true) : Observable.of(null),
           (h, a, s) => ({ hasWritePermissions: h, appSettingsResponse: a, slotConfigNamesResponse: s })
         )
       })
       .do(null, error => {
-        this._aiService.trackEvent("/errors/app-settings", error);
-        this._setupForm(this._appSettingsArm, this._slotConfigNamesArm);
+        this._logService.error(LogCategories.appSettings, '/app-settings', error);
+        this._setupForm(null, null);
         this.loadingFailureMessage = this._translateService.instant(PortalResources.configLoadFailure);
         this.loadingMessage = null;
         this.showPermissionsMessage = true;
@@ -128,19 +129,10 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     if (this._resourceIdSubscription) {
-      this._resourceIdSubscription.unsubscribe(); this._resourceIdSubscription = null;
+      this._resourceIdSubscription.unsubscribe();
+      this._resourceIdSubscription = null;
     }
     this._busyStateScopeManager.dispose();
-  }
-
-  private _setSlotConfigNamesUri() {
-    let baseUri = this.resourceId;
-
-    const index = this.resourceId.indexOf('/slots/');
-    if (index !== -1) {
-      baseUri = this.resourceId.substr(0, index);
-    }
-    this._slotConfigNamesUri = baseUri + '/config/slotConfigNames';
   }
 
   private _resetPermissionsAndLoadingState() {
@@ -187,7 +179,7 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
                   this._requiredValidator.validate.bind(this._requiredValidator),
                   this._uniqueAppSettingValidator.validate.bind(this._uniqueAppSettingValidator)])],
               value: [appSettingsArm.properties[name]],
-              isSlotSetting: [stickAppSettingNames.includes(name)]
+              isSlotSetting: [stickAppSettingNames.indexOf(name) !== -1]
             }));
           }
         }
@@ -248,7 +240,7 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
         appSettingsArm.properties[name] = appSettingGroups[i].value.value;
 
         if (appSettingGroups[i].value.isSlotSetting) {
-          if (!appSettingNames.includes(name)) {
+          if (appSettingNames.indexOf(name) === -1) {
             appSettingNames.push(name);
             appSettingNamesModified = true;
           }
@@ -265,7 +257,7 @@ export class AppSettingsComponent implements OnChanges, OnDestroy {
       return Observable.zip(
         this._cacheService.putArm(`${this.resourceId}/config/appSettings`, null, appSettingsArm),
         // TEMPORARY MITIGATION: Only do PUT on slotConfiNames API if there have been changes.
-        appSettingNamesModified ? this._cacheService.putArm(this._slotConfigNamesUri, null, slotConfigNamesArm) : Observable.of(null),
+        appSettingNamesModified ? this._cacheService.putArm(this._slotConfigNamesArmPath, null, slotConfigNamesArm) : Observable.of(null),
         Observable.of(appSettingNamesModified),
         (a, s, m) => ({ appSettingsResponse: a, slotConfigNamesResponse: s, appSettingNamesModified: m })
       )

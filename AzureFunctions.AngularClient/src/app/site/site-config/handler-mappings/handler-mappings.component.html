@@ -6,13 +6,7 @@
   
       <!-- ---------------------------------------------------------- TABLE ----------------------------------------------------------- -->
       <tbl tblClass="tbl fixed stretch" [items]="groupArray?.controls" #handlerMappingsTable>
-        <!--<tr class="header-row">
-          <th class="one-third-col padded-col"></th>
-          <th class="one-third-col padded-col"></th>
-          <th class="one-third-col padded-col"></th>
-          <th class="action-col"></th>
-        </tr>-->
-  
+
         <!-- Data/Content Rows -->
         <!-- If ARM call returned successfully, 'items' will not be null, so this will loop through and create a row for each handler mapping returned (if any) -->
         <tr *ngFor="let group of handlerMappingsTable.items">

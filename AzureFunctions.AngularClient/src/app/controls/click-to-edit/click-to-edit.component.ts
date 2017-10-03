@@ -48,6 +48,8 @@ export class ClickToEditComponent implements OnInit, AfterViewInit, OnDestroy {
   private _sub: Subscription;
 
   private _targetFocusState: 'focused' | 'blurring' | 'blurred';
+  private _focusFunc = (e: FocusEvent) => { this._targetFocusListener(e); };
+  private _blurFunc =  (e: FocusEvent) => { this._targetBlurListener(e); };
 
   constructor() { }
 
@@ -77,8 +79,8 @@ export class ClickToEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     if (this.target && this.target.nativeElement) {
-      this.target.nativeElement.addEventListener('focus', (e) => { this.targetFocusListener(e); }, true);
-      this.target.nativeElement.addEventListener('blur', (e) => { this.targetBlurListener(e); }, true);
+      this.target.nativeElement.addEventListener('focus', this._focusFunc, true);
+      this.target.nativeElement.addEventListener('blur', this._blurFunc, true);
     }
   }
 
@@ -88,8 +90,8 @@ export class ClickToEditComponent implements OnInit, AfterViewInit, OnDestroy {
       this._sub = null;
     }
     if (this.target && this.target.nativeElement) {
-      this.target.nativeElement.removeEventListener('focus', (e) => { this.targetFocusListener(e); }, true);
-      this.target.nativeElement.removeEventListener('blur', (e) => { this.targetBlurListener(e); }, true);
+      this.target.nativeElement.removeEventListener('focus', this._focusFunc, true);
+      this.target.nativeElement.removeEventListener('blur', this._blurFunc, true);
     }
   }
 
@@ -112,11 +114,11 @@ export class ClickToEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onTargetFocus() {
+  private _onTargetFocus() {
     this._updateShowTextbox(true);
   }
 
-  onTargetBlur() {
+  private _onTargetBlur() {
     if (!this.group.pristine) {
       for (let name in this.group.controls) {
         const control = this.group.controls[name] as CustomFormControl;
@@ -153,19 +155,19 @@ export class ClickToEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  targetBlurListener(event: FocusEvent) {
+  private _targetBlurListener(event: FocusEvent) {
     this._targetFocusState = 'blurring';
     setTimeout(() => {
       if (this._targetFocusState !== 'focused') {
         this._targetFocusState = 'blurred';
-        this.onTargetBlur();
+        this._onTargetBlur();
       }
     });
   }
 
-  targetFocusListener(event: FocusEvent) {
+  private _targetFocusListener(event: FocusEvent) {
     if (this._targetFocusState === 'blurred') {
-      this.onTargetFocus();
+      this._onTargetFocus();
     }
     this._targetFocusState = 'focused';
   }

@@ -115,6 +115,9 @@ export class SiteConfigComponent implements OnDestroy {
       if (this.mainForm.dirty) {
         this._broadcastService.setDirtyState(SiteTabIds.applicationSettings);
       }
+      else {
+        this._broadcastService.clearDirtyState(SiteTabIds.applicationSettings);
+      }
     });
   }
 
@@ -132,32 +135,14 @@ export class SiteConfigComponent implements OnDestroy {
   }
 
   save() {
-    const validationResults: SaveOrValidationResult[] = [
-      this.generalSettings.validate(),
-      this.appSettings.validate(),
-      this.connectionStrings.validate(),
-      this.defaultDocuments.validate(),
-      this.handlerMappings.validate(),
-      this.virtualDirectories.validate()
-    ];
+    this.generalSettings.validate();
+    this.appSettings.validate();
+    this.connectionStrings.validate();
+    this.defaultDocuments.validate();
+    this.handlerMappings.validate();
+    this.virtualDirectories.validate();
 
-    if (!this.mainForm.valid) {
-      const validationFailures: string[] = validationResults.filter(r => !r.success).map(r => r.error);
-      const validationNotification = this._translateService.instant(PortalResources.configUpdateFailure) + JSON.stringify(validationFailures);
-
-      this._busyStateScopeManager.setBusy();
-      let notificationId = null;
-      this._portalService.startNotification(
-        this._translateService.instant(PortalResources.configUpdating),
-        this._translateService.instant(PortalResources.configUpdating))
-        .first()
-        .subscribe(s => {
-          notificationId = s.id;
-          this._busyStateScopeManager.clearBusy();
-          this._portalService.stopNotification(notificationId, false, validationNotification);
-        });
-    }
-    else {
+    if (this.mainForm.valid) {
       this._busyStateScopeManager.setBusy();
       let notificationId = null;
       this._portalService.startNotification(

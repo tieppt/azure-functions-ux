@@ -288,8 +288,6 @@ export class GeneralSettingsComponent implements OnChanges, OnDestroy {
       }
 
       if (this._kind === 'functionapp') {
-        //netFrameworkSupported = false; //TODO: as per David Ebbo
-        //phpSupported = true; //TODO: as per David Ebbo
         phpSupported = false;
         pythonSupported = false;
         javaSupported = false;

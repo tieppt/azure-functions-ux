@@ -90,7 +90,13 @@ export class TblComponent implements OnInit, OnChanges {
 
       if (rowIndex >= 0 && cellIndex >= 0) {
         this._clearFocusOnCell(rows, this._focusedRowIndex, this._focusedCellIndex);
-        this._setFocusOnCell(rows, rowIndex, cellIndex);
+        if (cell.contains(document.activeElement)) {
+          this._focusedRowIndex = rowIndex;
+          this._focusedCellIndex = cellIndex;
+        }
+        else {
+          this._setFocusOnCell(rows, rowIndex, cellIndex);
+        }
       }
     }
   }
@@ -244,7 +250,9 @@ export class TblComponent implements OnInit, OnChanges {
       const srcCells = this._getCells(srcRow);
 
       if (cellIndex >= 0 && cellIndex < srcCells.length) {
-        const control = Dom.getTabbableControl(srcCells[cellIndex]);
+        const cell = srcCells[cellIndex];
+        const control = Dom.getTabbableControl(cell);
+        Dom.clearFocus(cell);
         Dom.clearFocus(control);
       }
     }

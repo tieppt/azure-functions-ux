@@ -96,15 +96,17 @@ export class ClickToEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private _focusChild() {
-    if (this.textbox) {
-      this.textbox.focus();
-    } else if (this.dropdown) {
-      this.dropdown.focus();
-    } else {
-      return;
-    }
+    if (this._targetFocusState !== 'focused') {
+      if (this.textbox) {
+        this.textbox.focus();
+      } else if (this.dropdown) {
+        this.dropdown.focus();
+      } else {
+        return;
+      }
 
-    this._targetFocusState = 'focused';
+      this._targetFocusState = 'focused';
+    }
   }
 
   onMouseDown(event: MouseEvent) {

@@ -24,17 +24,24 @@
       </tr>
 
       <!-- Placeholder/Message Row -->
-      <!-- If ARM call did not return successfully or no default documents were returned, display a placeholder row -->
-      <tr *ngIf="(!!groupArray && defaultDocumentsTable.items.length === 0) || !groupArray">
-        <td class="message-row" colspan="4">
-          <!-- If ARM call returned successfully but no default documents were returned, display a row with message 'No records' -->
-          <!-- If ARM call did not return successfully, display a row with the appropriate message based on permissions -->
-          {{
-            (!!groupArray && defaultDocumentsTable.items.length === 0) ? ('emptyDefaultDocuments' | translate) :
-            (!groupArray && hasWritePermissions) ? (loadingFailureMessage || loadingMessage) :
-            (!groupArray && !hasWritePermissions && showPermissionsMessage) ? permissionsMessage : ''
-          }}
+      <!-- If ARM call did not return successfully or there are no entries to display, display a placeholder row -->
+      <tr *ngIf="!groupArray || (!!groupArray && defaultDocumentsTable.items.length === 0)">
+
+        <!-- ARM call did not return successfully, and user has permissions -->
+        <td *ngIf="!groupArray && hasWritePermissions" class="message-row" colspan="2">
+          {{ (loadingFailureMessage || loadingMessage) }}
         </td>
+
+        <!-- ARM call did not return successfully, and user doesn't have permissions -->
+        <td *ngIf="!groupArray && !hasWritePermissions" class="message-row" colspan="2">
+          {{ showPermissionsMessage ? permissionsMessage : '' }}
+        </td>
+
+        <!-- ARM call returned successfully, but there are no entries to display -->
+        <td *ngIf="!!groupArray && defaultDocumentsTable.items.length === 0" class="message-row" colspan="2">
+          {{ ('emptyDefaultDocuments' | translate) }}
+        </td>
+
       </tr>
 
     </tbl>

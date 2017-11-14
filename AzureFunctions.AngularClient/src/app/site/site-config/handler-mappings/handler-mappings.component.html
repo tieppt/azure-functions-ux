@@ -5,7 +5,7 @@
   <div class="settings-wrapper">
 
     <!-- ---------------------------------------------------------- TABLE ----------------------------------------------------------- -->
-    <table-root tblClass="tbl fixed stretch" name="Resources.feature_handlerMappingsName | translate" [items]="groupArray?.controls" #handlerMappingsTable>
+    <table-root tblClass="tbl fixed stretch" [name]="Resources.feature_handlerMappingsName | translate" [items]="groupArray?.controls" #handlerMappingsTable>
 
       <!-- Data/Content Rows -->
       <!-- If ARM call returned successfully, 'items' will not be null, so this will loop through and create a row for each handler mapping returned (if any) -->
@@ -36,7 +36,7 @@
         </td>
 
         <td class="action-col" table-cell [editable]="false">
-          <span tabindex="0" class="fa fa-times delete" (click)="deleteItem(group)"></span>
+          <span tabindex="0" class="fa fa-times delete" (keypress)="deleteItem(group, $event.keyCode !== keyCodes.enter)" (click)="deleteItem(group, false)"></span>
         </td>
 
       </tr>

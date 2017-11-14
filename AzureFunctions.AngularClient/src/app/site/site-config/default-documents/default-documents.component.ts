@@ -280,15 +280,17 @@ export class DefaultDocumentsComponent implements OnChanges, OnDestroy {
     return this._translateService.instant(PortalResources.configUpdateFailureInvalidInput, { configGroupName: configGroupName });
   }
 
-  deleteItem(group: FormGroup) {
-    let groups = this.groupArray;
-    let index = groups.controls.indexOf(group);
-    if (index >= 0) {
-      if ((group as CustomFormGroup)._msExistenceState === 'original') {
-        this._deleteOriginalItem(groups, group);
-      }
-      else {
-        this._deleteAddedItem(groups, group, index);
+  deleteItem(group: FormGroup, ignore?: boolean) {
+    if (!ignore) {
+      let groups = this.groupArray;
+      let index = groups.controls.indexOf(group);
+      if (index >= 0) {
+        if ((group as CustomFormGroup)._msExistenceState === 'original') {
+          this._deleteOriginalItem(groups, group);
+        }
+        else {
+          this._deleteAddedItem(groups, group, index);
+        }
       }
     }
   }

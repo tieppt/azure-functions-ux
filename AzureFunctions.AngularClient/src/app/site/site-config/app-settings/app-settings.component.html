@@ -5,7 +5,7 @@
   <div class="settings-wrapper">
 
     <!-- ---------------------------------------------------------- TABLE ----------------------------------------------------------- -->
-    <table-root tblClass="tbl fixed stretch" name="Resources.feature_applicationSettingsName | translate" [items]="groupArray?.controls" #appSettingsTable>
+    <table-root tblClass="tbl fixed stretch" [name]="Resources.feature_applicationSettingsName | translate" [items]="groupArray?.controls" #appSettingsTable>
 
       <!-- Data/Content Rows -->
       <!-- If ARM call returned successfully, 'items' will not be null, so this will loop through and create a row for each app setting returned (if any) -->

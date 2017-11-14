@@ -217,13 +217,13 @@
         </div>
       </div>
     </ng-container>
-
+<!--
     <div *ngIf="!group || !hasWritePermissions" class="shield">
       <div *ngIf="!group && !!loadingFailureMessage && (hasWritePermissions || !showPermissionsMessage)" class="shield-message">
         {{ loadingFailureMessage }}
       </div>
     </div>
-
+-->
   </div>
   
   <ng-container *ngIf="remoteDebuggingSupported">
@@ -254,13 +254,13 @@
           </radio-selector>
         </div>
       </div>
-
+<!--
       <div *ngIf="!group || !hasWritePermissions" class="shield">
         <div *ngIf="!group && !!loadingFailureMessage && (hasWritePermissions || !showPermissionsMessage)" class="shield-message">
           {{ loadingFailureMessage }}
         </div>
       </div>
-
+-->
     </div>
   </ng-container>
 
@@ -298,21 +298,21 @@
           </textbox>
         </div>
       </div>
-
+<!--
       <div *ngIf="!group || !hasWritePermissions" class="shield">
         <div *ngIf="!group && !!loadingFailureMessage && (hasWritePermissions || !showPermissionsMessage)" class="shield-message">
           {{ loadingFailureMessage }}
         </div>
       </div>
-
+-->
     </div>
   </ng-container>
-
+<!--
   <div *ngIf="!hasWritePermissions" class="shield transparent">
     <div *ngIf="showPermissionsMessage" class="shield-message">
       <p>{{ permissionsMessage }}</p>
       <button class="transparent" (click)="showPermissionsMessage=false">{{ showReadOnlySettingsMessage }}</button>
     </div>
   </div>
-
+-->
 </div>

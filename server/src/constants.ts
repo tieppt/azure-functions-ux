@@ -7,6 +7,7 @@ export namespace constants {
         export const frontEndPrincipalNameHeader = 'X-MS-CLIENT-PRINCIPAL-NAME';
         export const portalTokenHeader = 'portal-token';
         export const anonymousUserName = 'Anonymous';
+        export const authorizationHeader = 'Authorization';
     }
     export const templatesPath = '';
 }

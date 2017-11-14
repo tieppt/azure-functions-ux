@@ -2,29 +2,27 @@
 import { Request, Response, NextFunction, Application } from 'express';
 import { localhostStrategy } from './authentication-strategies/localhost-strategy';
 import { azureStrategy } from './authentication-strategies/azure-strategy';
+import { environment } from './environment';
 
 
 export function setupAuthentication(app: Application) {
-    const localhost = true;
-    if (localhost) {
+    if (!environment.isAzure()) {
         localhostStrategy.setup(app);
     }
 }
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
-    const localhost = true;
-    if (localhost) {
-        localhostStrategy.authenticate(req, res, next);
-    } else {
+    if (environment.isAzure()) {
         azureStrategy.authenticate(req, res, next);
+    } else {
+        localhostStrategy.authenticate(req, res, next);
     }
 }
 
 export function maybeAuthenticate(req: Request, res: Response, next: NextFunction) {
-    const localhost = true;
-    if (localhost) {
-        localhostStrategy.maybeAuthenticate(req, res, next);
-    } else {
+    if (environment.isAzure()) {
         azureStrategy.maybeAuthenticate(req, res, next);
+    } else {
+        localhostStrategy.maybeAuthenticate(req, res, next);
     }
 }

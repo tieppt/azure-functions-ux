@@ -35,7 +35,15 @@
         </td>
 
         <td class="action-col" table-cell [editable]="false">
-          <span tabindex="0" class="fa fa-times delete" (keypress)="deleteItem(group, $event.keyCode !== keyCodes.enter)" (click)="deleteItem(group, false)"></span>
+          <span
+            [tabindex]="hasWritePermissions ? 0 : -1"
+            role="button"
+            class="fa fa-times delete"
+            [attr.aria-label]="Resources._delete | translate"
+            [attr.aria-disabled]="!hasWritePermissions"
+            (keypress)="hasWritePermissions && $event.keyCode === keyCodes.enter ? deleteItem(group) : null"
+            (click)="hasWritePermissions ? deleteItem(group) : null">
+          </span>
         </td>
 
       </tr>
@@ -67,12 +75,12 @@
 
     <!-- --------------------------------------------------------  ADD LINK --------------------------------------------------------- -->
     <!-- Display 'add' link if ARM call returned successfully and user has write permissions and new pristine item doesn't exist  -->
-    <div *ngIf="!!groupArray && hasWritePermissions && !newItem?.pristine" class="link add-setting" (click)="addItem()">
+    <div *ngIf="!!groupArray && hasWritePermissions && !newItem?.pristine" tabindex="0" role="button" class="link add-setting" (keypress)="$event.keyCode === keyCodes.enter ? addItem() : null" (click)="addItem()">
       {{ 'addNewVirtualDirectory' | translate }}
     </div>
 
     <!-- Display 'add' link disabled if ARM call did not return successfully or user does not have write permissions, or new pristine item already exits -->
-    <div *ngIf="!groupArray || !hasWritePermissions || newItem?.pristine" class="disabled-link add-setting">
+    <div *ngIf="!groupArray || !hasWritePermissions || newItem?.pristine" tabindex="-1" role="button" class="disabled-link add-setting" aria-disabled="true">
       {{ 'addNewVirtualDirectory' | translate }}
     </div>
     <!-- ---------------------------------------------------------------------------------------------------------------------------- -->

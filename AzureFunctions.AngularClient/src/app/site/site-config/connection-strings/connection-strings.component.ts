@@ -11,7 +11,7 @@ import { SlotConfigNames } from './../../../shared/models/arm/slot-config-names'
 import { ConnectionStrings, ConnectionStringType } from './../../../shared/models/arm/connection-strings';
 import { EnumEx } from './../../../shared/Utilities/enumEx';
 import { SaveOrValidationResult } from './../site-config.component';
-import { LogCategories } from 'app/shared/models/constants';
+import { LogCategories, KeyCodes } from 'app/shared/models/constants';
 import { LogService } from './../../../shared/services/log.service';
 import { PortalResources } from './../../../shared/models/portal-resources';
 import { DropDownElement } from './../../../shared/models/drop-down-element';
@@ -55,6 +55,8 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
 
   public newItem: CustomFormGroup;
   public originalItemsDeleted: number;
+
+  public keyCodes: KeyCodes = KeyCodes;
 
   @Input() mainForm: FormGroup;
 
@@ -352,17 +354,15 @@ export class ConnectionStringsComponent implements OnChanges, OnDestroy {
     return this._translateService.instant(PortalResources.configUpdateFailureInvalidInput, { configGroupName: configGroupName });
   }
 
-  deleteItem(group: FormGroup, ignore?: boolean) {
-    if (!ignore) {
-      let groups = this.groupArray;
-      let index = groups.controls.indexOf(group);
-      if (index >= 0) {
-        if ((group as CustomFormGroup)._msExistenceState === 'original') {
-          this._deleteOriginalItem(groups, group);
-        }
-        else {
-          this._deleteAddedItem(groups, group, index);
-        }
+  deleteItem(group: FormGroup) {
+    let groups = this.groupArray;
+    let index = groups.controls.indexOf(group);
+    if (index >= 0) {
+      if ((group as CustomFormGroup)._msExistenceState === 'original') {
+        this._deleteOriginalItem(groups, group);
+      }
+      else {
+        this._deleteAddedItem(groups, group, index);
       }
     }
   }

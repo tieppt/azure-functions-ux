@@ -115,7 +115,7 @@ export class TableCellComponent {
                 // The cell is currently selected and is "editable"
                 this.parentRow.setEditMode(true);
                 setTimeout(() => {
-                    const target = Dom.getTabbableControl(this._eref.nativeElement);
+                    const target = Dom.getTabbableControl(this._eref.nativeElement, ['boundary-left', 'boundary-right']);
                     target.focus();
                 });
             }

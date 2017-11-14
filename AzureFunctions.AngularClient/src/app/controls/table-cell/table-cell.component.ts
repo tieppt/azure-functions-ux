@@ -2,6 +2,7 @@ import { Dom } from './../../shared/Utilities/dom';
 import { KeyCodes } from './../../shared/models/constants';
 import { Component, Input, ElementRef, ViewChild } from '@angular/core';
 import { TableRowComponent } from './../table-row/table-row.component';
+import { PortalResources } from './../../shared/models/portal-resources';
 
 export enum TableCellContentType {
     Text,
@@ -28,6 +29,8 @@ export interface TableCellNotification {
     }
 })
 export class TableCellComponent {
+    public Resources = PortalResources;
+
     @Input() editable: boolean;
 
     @ViewChild('boundaryLeft') boundaryLeft: ElementRef;

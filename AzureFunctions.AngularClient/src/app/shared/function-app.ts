@@ -1,4 +1,5 @@
-﻿import { BroadcastService } from 'app/shared/services/broadcast.service';
+﻿import { PortalService } from './services/portal.service';
+import { BroadcastService } from 'app/shared/services/broadcast.service';
 import { AiService } from 'app/shared/services/ai.service';
 import { Injector } from '@angular/core';
 import { ArmUtil } from 'app/shared/Utilities/arm-utils';
@@ -130,8 +131,9 @@ export class FunctionApp {
     private _languageService: LanguageService;
     private _authZService: AuthzService;
     private _aiService: AiService;
-    private _configService: ConfigService;
+    // private _configService: ConfigService;
     private _slotsService: SiteService;
+    private _portalService: PortalService;
 
     constructor(public site: ArmObj<Site>, injector: Injector) {
 
@@ -145,8 +147,9 @@ export class FunctionApp {
         this._languageService = injector.get(LanguageService);
         this._authZService = injector.get(AuthzService);
         this._aiService = injector.get(AiService);
-        this._configService = injector.get(ConfigService);
+        // this._configService = injector.get(ConfigService);
         this._slotsService = injector.get(SiteService);
+        this._portalService = injector.get(PortalService);
 
         this._http = new NoCorsHttpService(this._cacheService, this._ngHttp, this._broadcastService, this._aiService, this._translateService, () => this.getPortalHeaders());
 
@@ -182,10 +185,10 @@ export class FunctionApp {
 
         }
 
-        const scmUrl = FunctionApp.getScmUrl(this._configService, this.site);
-        const mainSiteUrl = FunctionApp.getMainUrl(this._configService, this.site);
+        // const scmUrl = FunctionApp.getScmUrl(this._configService, this.site);
+        // const mainSiteUrl = FunctionApp.getMainUrl(this._configService, this.site);
 
-        this.urlTemplates = new UrlTemplates(scmUrl, mainSiteUrl, ArmUtil.isLinuxApp(this.site));
+        this.urlTemplates = new UrlTemplates(this.site, injector);
 
         this.siteName = this.site.name;
 
@@ -665,9 +668,13 @@ export class FunctionApp {
     }
 
     initKeysAndWarmupMainSite() {
+        if (this._portalService.isEmbeddedFunctions) {
+            return Observable.of(null);
+        }
+
         this._http.post(this.urlTemplates.pingUrl, '')
             .retryWhen(this.retryAntares)
-            .subscribe(() =>{});
+            .subscribe(() => { });
 
         return this.getHostSecretsFromScm();
     }

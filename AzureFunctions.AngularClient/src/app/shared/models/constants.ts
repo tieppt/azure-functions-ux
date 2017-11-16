@@ -100,6 +100,8 @@ export class Regex {
     public static readonly invalidEntityName: RegExp = /[^\u00BF-\u1FFF\u2C00-\uD7FF\a-zA-Z0-9-]/;//matches any character(i.e. german, chinese, english) or -
     public static readonly header: RegExp = /^[a-zA-Z0-9\-_]+$/;
     public static readonly functionName: RegExp = /^[a-zA-Z][a-zA-Z0-9_\-]{0,127}$/;
+    // public static readonly cdsEntityIdParts = /\/.+\/providers\/microsoft\.web\/environments\/([a-z0-9\-]+)\/namespaces\/([a-z0-9\-]+)\/entities\/([a-z0-9\-]+)$/gi;
+    // public static readonly cdsNamespaceId = /.*(\/environments\/[a-z0-9\-]+\/namespaces\/[a-z0-9\-]+\/entities\/[a-z0-9\-]+)/gi;
 }
 
 export class Links {
@@ -160,6 +162,7 @@ export class ScenarioIds {
     public static readonly addSiteQuotas = 'ShowSiteQuotas';
     public static readonly addConsole = 'AddConsole';
     public static readonly addSsh = 'AddSsh';
+    public static readonly addTopLevelAppsNode = 'AddTopLevelAppsNode';
     public static readonly enablePushNotifications = 'EnablePushNotifications';
     public static readonly enableAuth = 'EnableAuth';
     public static readonly enableMsi = 'EnableMsi';
@@ -173,11 +176,11 @@ export class ScenarioIds {
     public static readonly addSiteFileStorage = 'ShowSiteFileStorage';
     public static readonly showSitePin = 'ShowSitePin';
     public static readonly showCreateRefreshSub = 'ShowCreateRefreshSub';
+    public static readonly showSideNavMenu = 'ShowSideNavMenu';
     public static readonly enablePlatform64 = 'EnablePlatform64';
     public static readonly enableAlwaysOn = 'EnableAlwaysOn';
     public static readonly deleteAppDirectly = 'deleteAppDirectly';
     public static readonly enableAutoSwap = 'EnableAutoSwap';
-
     public static readonly createApp = 'createApp';
     public static readonly filterAppNodeChildren = 'FilterAppNodeChildren';
 }

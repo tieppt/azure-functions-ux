@@ -1,11 +1,14 @@
+import { EventsNode } from './../tree-view/events-node';
+// import { FunctionsService } from './../shared/services/functions-service';
+import { ScenarioService } from './../shared/services/scenario/scenario.service';
 import { LogService } from './../shared/services/log.service';
-import { Router, ActivatedRoute} from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { BroadcastEvent } from 'app/shared/models/broadcast-event';
 import { StoredSubscriptions } from './../shared/models/localStorage/local-storage';
 import { Dom } from './../shared/Utilities/dom';
 import { SubUtil } from './../shared/Utilities/sub-util';
 import { SearchBoxComponent } from './../search-box/search-box.component';
-import { Component, ViewChild, AfterViewInit, Input, Injector } from '@angular/core';
+import { Component, ViewChild, AfterViewInit, Input, Injector, OnDestroy } from '@angular/core';
 import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -16,8 +19,8 @@ import { FunctionApp } from './../shared/function-app';
 import { PortalResources } from './../shared/models/portal-resources';
 import { AuthzService } from './../shared/services/authz.service';
 import { LanguageService } from './../shared/services/language.service';
-import { LocalStorageKeys, Arm, LogCategories } from './../shared/models/constants';
-import { SiteDescriptor, Descriptor } from './../shared/resourceDescriptors';
+import { LocalStorageKeys, Arm, LogCategories, ScenarioIds } from './../shared/models/constants';
+import { ArmSiteDescriptor } from './../shared/resourceDescriptors';
 import { PortalService } from './../shared/services/portal.service';
 import { LocalStorageService } from './../shared/services/local-storage.service';
 import { TreeNode } from '../tree-view/tree-node';
@@ -36,13 +39,14 @@ import { DashboardType } from '../tree-view/models/dashboard-type';
 import { Subscription } from '../shared/models/subscription';
 import { SiteService } from './../shared/services/slots.service';
 import { Url } from 'app/shared/Utilities/url';
+import { StartupInfo } from 'app/shared/models/portal';
 
 @Component({
     selector: 'side-nav',
     templateUrl: './side-nav.component.html',
     styleUrls: ['./side-nav.component.scss']
 })
-export class SideNavComponent implements AfterViewInit {
+export class SideNavComponent implements AfterViewInit, OnDestroy {
     @ViewChild('treeViewContainer') treeViewContainer;
     @ViewChild(SearchBoxComponent) searchBox: SearchBoxComponent;
 
@@ -65,6 +69,7 @@ export class SideNavComponent implements AfterViewInit {
 
     private _subscriptionsStream = new ReplaySubject<Subscription[]>(1);
     private _searchTermStream = new ReplaySubject<string>(1);
+    private _ngUnsubscribe = new Subject();
 
     private _initialized = false;
 
@@ -80,7 +85,7 @@ export class SideNavComponent implements AfterViewInit {
         public configService: ConfigService,
         public armService: ArmService,
         public cacheService: CacheService,
-        public functionsService: TryFunctionsService,
+        public tryFunctionsService: TryFunctionsService,
         public http: Http,
         public globalStateService: GlobalStateService,
         public broadcastService: BroadcastService,
@@ -94,69 +99,41 @@ export class SideNavComponent implements AfterViewInit {
         public slotsService: SiteService,
         public logService: LogService,
         public router: Router,
-        public route: ActivatedRoute) {
+        public route: ActivatedRoute,
+        private _scenarioService: ScenarioService,
+        // private _functionsService: FunctionsService
+    ) {
 
-        userService.getStartupInfo().subscribe(info => {
+        userService.getStartupInfo()
+            .takeUntil(this._ngUnsubscribe)
+            .subscribe(info => {
 
-            const sitenameIncoming = !!info.resourceId ? SiteDescriptor.getSiteDescriptor(info.resourceId).site.toLocaleLowerCase() : null;
-            const initialSiteName = !!this.initialResourceId ? SiteDescriptor.getSiteDescriptor(this.initialResourceId).site.toLocaleLowerCase() : null;
-            if (sitenameIncoming !== initialSiteName) {
-                this.portalService.sendTimerEvent({
-                    timerId: 'TreeViewLoad',
-                    timerAction: 'start'
-                });
-            }
-
-            // This is a workaround for the fact that Ibiza sends us an updated info whenever
-            // child blades close.  If we get a new info object, then we'll rebuild the tree.
-            // The true fix would be to make sure that we never set the resourceId of the hosting
-            // blade, but that's a pretty large change and this should be sufficient for now.
-            if (!this._initialized && !this.globalStateService.showTryView) {
-
-                this._initialized = true;
-                this.rootNode = new TreeNode(this, null, null);
-
-                const appsNode = new AppsNode(
-                    this,
-                    this.rootNode,
-                    this._subscriptionsStream,
-                    this._searchTermStream,
-                    this.resourceId);
-
-                this.rootNode.children = [appsNode];
-                this.rootNode.isExpanded = true;
-
-                appsNode.parent = this.rootNode;
-
-                // Need to allow the appsNode to wire up its subscriptions
-                setTimeout(() => {
-                    appsNode.select();
-                }, 10);
-
-                this._searchTermStream
-                    .subscribe(term => {
-                        this.searchTerm = term;
-                    });
-
-                if (this.subscriptionOptions.length === 0) {
-                    this._setupInitialSubscriptions(info.resourceId);
+                // This is a workaround for the fact that Ibiza sends us an updated info whenever
+                // child blades close.  If we get a new info object, then we'll rebuild the tree.
+                // The true fix would be to make sure that we never set the resourceId of the hosting
+                // blade, but that's a pretty large change and this should be sufficient for now.
+                if (!this._initialized && !this.globalStateService.showTryView) {
+                    this._initializeTree(info);
                 }
-            }
-            this.initialResourceId = info.resourceId;
-            if (this.initialResourceId) {
-                const descriptor = <SiteDescriptor>Descriptor.getDescriptor(this.initialResourceId);
-                if (descriptor.site) {
-                    this._searchTermStream.next(`"${descriptor.site}"`);
-                    this.hasValue = true;
+
+                this.initialResourceId = info.resourceId;
+
+                // For now, search updates only apply at the apps level
+                if (this.initialResourceId && this.rootNode.children[0].dashboardType === DashboardType.AppsDashboard) {
+                    const descriptor = <ArmSiteDescriptor>ArmSiteDescriptor.getSiteDescriptor(this.initialResourceId);
+                    if (descriptor.site) {
+                        this._searchTermStream.next(`"${descriptor.site}"`);
+                        this.hasValue = true;
+                    } else {
+                        this._searchTermStream.next('');
+                    }
                 } else {
                     this._searchTermStream.next('');
                 }
-            } else {
-                this._searchTermStream.next('');
-            }
-        });
+            });
 
         this._tryFunctionAppStream
+            .takeUntil(this._ngUnsubscribe)
             .mergeMap(tryFunctionApp => {
                 this.tryFunctionApp = tryFunctionApp;
                 return tryFunctionApp.getFunctions();
@@ -193,6 +170,68 @@ export class SideNavComponent implements AfterViewInit {
         }
     }
 
+    private _initializeTree(info: StartupInfo) {
+        this._initialized = true;
+        this.rootNode = new TreeNode(this, null, null);
+
+        if (this._scenarioService.checkScenario(ScenarioIds.addTopLevelAppsNode).status !== 'disabled') {
+            const sitenameIncoming = !!info.resourceId ? new ArmSiteDescriptor(info.resourceId).site.toLocaleLowerCase() : null;
+            const initialSiteName = !!this.initialResourceId ? new ArmSiteDescriptor(this.initialResourceId).site.toLocaleLowerCase() : null;
+            if (sitenameIncoming !== initialSiteName) {
+                this.portalService.sendTimerEvent({
+                    timerId: 'TreeViewLoad',
+                    timerAction: 'start'
+                });
+            }
+
+            const appsNode = new AppsNode(
+                this,
+                this.rootNode,
+                this._subscriptionsStream,
+                this._searchTermStream,
+                this.resourceId);
+
+            this.rootNode.children = [appsNode];
+            this.rootNode.isExpanded = true;
+
+            appsNode.parent = this.rootNode;
+
+            // Need to allow the appsNode to wire up its subscriptions
+            setTimeout(() => {
+                appsNode.select();
+            }, 10);
+
+            this._searchTermStream
+                .subscribe(term => {
+                    this.searchTerm = term;
+                });
+
+            if (this.subscriptionOptions.length === 0) {
+                this._setupInitialSubscriptions(info.resourceId);
+            }
+        } else {
+            // const functionsNode = new FunctionsNode(this, null, this.rootNode);
+            // this.rootNode.children = [functionsNode];
+            // this.rootNode.isExpanded = true;
+
+            const resourceIdMatch = /\/resources([a-z0-9\-\/]+)/gi.exec(this.router.url);
+
+            if(resourceIdMatch && resourceIdMatch.length > 1){
+                const resourceId = `/providers/microsoft.web${resourceIdMatch[1]}`;
+                
+                    this.rootNode.children = [new EventsNode(this, this.rootNode, resourceId)];
+                    this.rootNode.isExpanded = true;
+                
+            }else{
+                // log error
+            }
+
+        }
+
+
+
+    }
+
     private _getViewContainer(): HTMLDivElement {
         const treeViewContainer = this.treeViewContainer && <HTMLDivElement>this.treeViewContainer.nativeElement;
 
@@ -201,6 +240,10 @@ export class SideNavComponent implements AfterViewInit {
         }
 
         return <HTMLDivElement>treeViewContainer.querySelector('.top-level-children');
+    }
+
+    ngOnDestroy() {
+        this._ngUnsubscribe.next();
     }
 
     public scrollIntoView() {
@@ -275,21 +318,21 @@ export class SideNavComponent implements AfterViewInit {
 
     navidateToNewSub() {
         const navId = 'subs/new/subscription';
-        this.router.navigate([navId], { relativeTo: this.route, queryParams: Url.getQueryStringObj() });        
+        this.router.navigate([navId], { relativeTo: this.route, queryParams: Url.getQueryStringObj() });
     }
 
     refreshSubs() {
         this.cacheService.getArm('/subscriptions', true).subscribe(r => {
             this.userService.getStartupInfo()
-            .first()
-            .subscribe((info) => {
-                const subs: Subscription[] = r.json().value;
-                if (!SubUtil.subsChanged(info.subscriptions, subs)) {
-                    return;
-                }
-                info.subscriptions = subs;
-                this.userService.updateStartupInfo(info);
-            });
+                .first()
+                .subscribe((info) => {
+                    const subs: Subscription[] = r.json().value;
+                    if (!SubUtil.subsChanged(info.subscriptions, subs)) {
+                        return;
+                    }
+                    info.subscriptions = subs;
+                    this.userService.updateStartupInfo(info);
+                });
         });
     }
 
@@ -420,10 +463,10 @@ export class SideNavComponent implements AfterViewInit {
             .subscribe(info => {
                 const savedSubs = <StoredSubscriptions>this.localStorageService.getItem(LocalStorageKeys.savedSubsKey);
                 const savedSelectedSubscriptionIds = savedSubs ? savedSubs.subscriptions : [];
-                let descriptor: SiteDescriptor;
+                let descriptor: ArmSiteDescriptor;
 
                 if (resourceId) {
-                    descriptor = new SiteDescriptor(resourceId);
+                    descriptor = new ArmSiteDescriptor(resourceId);
                 }
 
                 let count = 0;

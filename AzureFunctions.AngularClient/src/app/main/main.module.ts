@@ -52,6 +52,22 @@ const routing: ModuleWithProviders = RouterModule.forChild([
             {
                 path: 'subscriptions/:subscriptionId/resourcegroups/:resourceGroup/sites/:site/slots/:slot/proxies',
                 loadChildren: 'app/proxies.module#ProxiesModule'
+            },
+            {
+                path: 'providers/microsoft.web/environments/:environmentId/namespaces/:namespaceId/entities/:entityId/functions',
+                loadChildren: 'app/functions.module#FunctionsModule'
+            },
+            // {
+            //     path: 'functions',
+            //     loadChildren: 'app/functions.module#FunctionsModule'
+            // },
+            // {
+            //     path: 'environments/:environmentId/namespaces/:namespaceId/functions',
+            //     loadChildren: 'app/functions.module#FunctionsModule'
+            // },
+            {
+                path: '**',
+                component: EmptyDashboardComponent
             }
         ]
     }

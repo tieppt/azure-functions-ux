@@ -1,3 +1,4 @@
+import { PortalService } from './portal.service';
 import { TryFunctionsService } from './try-functions.service';
 import { ApiProxy } from './../models/api-proxy';
 import { WebApiException, FunctionRuntimeError } from './../models/webapi-exception';
@@ -23,7 +24,7 @@ import { Site } from './../models/arm/site';
 import { ArmObj } from './../models/arm/arm-obj';
 import { FunctionInfo } from './../models/function-info';
 import { CacheService } from 'app/shared/services/cache.service';
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { UrlTemplates } from 'app/shared/url-templates';
 import { Http, Headers, Response } from '@angular/http';
 import { ErrorIds } from '../models/error-ids';
@@ -56,7 +57,9 @@ export class FunctionsService {
         private _aiService: AiService,
         private _translateService: TranslateService,
         private _siteService: SiteService,
-        private _tryFunctionsService: TryFunctionsService) {
+        private _tryFunctionsService: TryFunctionsService,
+        private _portalService: PortalService,
+        private _injector: Injector) {
 
         this._http = new NoCorsHttpService(this._cacheService, this._ngHttp, this._broadcastService, this._aiService, this._translateService, () => this._getPortalHeaders());
 
@@ -72,14 +75,14 @@ export class FunctionsService {
         return this._cacheService.getArm(siteResourceId)
             .switchMap(r => {
                 const site: ArmObj<Site> = r.json();
-                const scmUrl = this.getScmUrl(site);
-                const mainSiteUrl = this.getMainUrl(site);
+
+                const urlTemplate = new UrlTemplates(site, this._injector);
 
                 context = {
                     site: site,
-                    scmUrl: scmUrl,
-                    mainSiteUrl: mainSiteUrl,
-                    urlTemplates: new UrlTemplates(scmUrl, mainSiteUrl, ArmUtil.isLinuxApp(site))
+                    scmUrl: urlTemplate.scmSiteUrl,
+                    mainSiteUrl: urlTemplate.runtimeSiteUrl,
+                    urlTemplates: new UrlTemplates(site, this._injector)
                 };
 
                 return this._initKeysAndWarmupMainSite(context);
@@ -284,7 +287,7 @@ export class FunctionsService {
     }
 
     public getAuthSettings(context: FunctionAppContext): Observable<AuthSettings> {
-        if (context.tryFunctionsScmCreds) {
+        if (this._tryFunctionsService.functionContainer) {
             return Observable.of({
                 easyAuthEnabled: false,
                 AADConfigured: false,
@@ -306,6 +309,10 @@ export class FunctionsService {
     }
 
     private _initKeysAndWarmupMainSite(context: FunctionAppContext) {
+        if (this._portalService.isEmbeddedFunctions) {
+            return Observable.of(null);
+        }
+
         this._http.post(context.urlTemplates.pingUrl, '')
             .retryWhen(this.retryAntares)
             .subscribe(() => { });

@@ -1,5 +1,5 @@
 import { FunctionsService, FunctionAppContext } from './../shared/services/functions-service';
-import { SiteDescriptor } from './../shared/resourceDescriptors';
+import { ArmSiteDescriptor } from './../shared/resourceDescriptors';
 import { CacheService } from 'app/shared/services/cache.service';
 import { Component, ElementRef, Inject, OnDestroy, Injector } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
@@ -90,7 +90,7 @@ export class FunctionNewComponent implements OnDestroy {
                 this.functionsNode = <FunctionsNode>viewInfo.node;
                 this.appNode = <AppNode>viewInfo.node.parent;
 
-                const descriptor = new SiteDescriptor(viewInfo.resourceId);
+                const descriptor = new ArmSiteDescriptor(viewInfo.resourceId);
                 return this._functionsService.getAppContext(descriptor.getTrimmedResourceId());
             })
             .switchMap(context => {

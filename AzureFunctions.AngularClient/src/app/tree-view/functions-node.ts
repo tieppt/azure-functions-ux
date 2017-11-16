@@ -2,9 +2,9 @@ import { Subject } from 'rxjs/Subject';
 import { BroadcastEvent } from 'app/shared/models/broadcast-event';
 import { TreeUpdateEvent } from './../shared/models/broadcast-event';
 import { CacheService } from 'app/shared/services/cache.service';
-import { FunctionDescriptor } from 'app/shared/resourceDescriptors';
+import { ArmFunctionDescriptor } from 'app/shared/resourceDescriptors';
 import { FunctionAppContext } from './../shared/services/functions-service';
-import { EditModeHelper } from './../shared/Utilities/edit-mode.helper';
+// import { EditModeHelper } from './../shared/Utilities/edit-mode.helper';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/switchMap';
@@ -33,11 +33,17 @@ export class FunctionsNode extends BaseFunctionsProxiesNode implements MutableCo
         sideNav: SideNavComponent,
         context: FunctionAppContext,
         parentNode: TreeNode) {
-        super(sideNav,
-            context.site.id + '/functions',
-            context,
-            parentNode,
-            context.site.id + '/functions/new/function');
+            super(sideNav,
+                '/functions',
+                context,
+                parentNode,
+                '/functions/new/function');
+    
+            // super(sideNav,
+        //     context.site.id + '/functions',
+        //     context,
+        //     parentNode,
+        //     context.site.id + '/functions/new/function');
 
         this._cacheService = sideNav.injector.get(CacheService);
 
@@ -45,17 +51,17 @@ export class FunctionsNode extends BaseFunctionsProxiesNode implements MutableCo
         this.iconUrl = 'image/BulletList.svg';
         this.nodeClass += ' collection-node';
 
-        this._functionsService.getFunctionAppEditMode(context)
-            .map(EditModeHelper.isReadOnly)
-            .subscribe(isReadOnly => {
-                if (isReadOnly) {
-                    this.title = `${this.sideNav.translateService.instant(PortalResources.functions)} (${this.sideNav.translateService.instant(PortalResources.appFunctionSettings_readOnlyMode)})`;
-                    this.newDashboardType = DashboardType.none;
-                } else {
-                    this.title = this.sideNav.translateService.instant(PortalResources.functions);
-                    this.newDashboardType = DashboardType.CreateFunctionAutoDetectDashboard;
-                }
-            });
+        // this._functionsService.getFunctionAppEditMode(context)
+        //     .map(EditModeHelper.isReadOnly)
+        //     .subscribe(isReadOnly => {
+        //         if (isReadOnly) {
+        //             this.title = `${this.sideNav.translateService.instant(PortalResources.functions)} (${this.sideNav.translateService.instant(PortalResources.appFunctionSettings_readOnlyMode)})`;
+        //             this.newDashboardType = DashboardType.none;
+        //         } else {
+        //             this.title = this.sideNav.translateService.instant(PortalResources.functions);
+        //             this.newDashboardType = DashboardType.CreateFunctionAutoDetectDashboard;
+        //         }
+        //     });
     }
 
     public handleSelection(): Observable<any> {
@@ -104,7 +110,7 @@ export class FunctionsNode extends BaseFunctionsProxiesNode implements MutableCo
 
     public removeChild(resourceId: string, callRemoveOnChild?: boolean) {
 
-        const descriptor = new FunctionDescriptor(resourceId);
+        const descriptor = new ArmFunctionDescriptor(resourceId);
         resourceId = descriptor.getTrimmedResourceId();
 
         const removeIndex = this.children.findIndex(c => c.resourceId.toLowerCase() === resourceId.toLowerCase());
@@ -112,7 +118,7 @@ export class FunctionsNode extends BaseFunctionsProxiesNode implements MutableCo
     }
 
     public updateChild(resourceId: string, disabled: boolean) {
-        const descriptor = new FunctionDescriptor(resourceId);
+        const descriptor = new ArmFunctionDescriptor(resourceId);
         resourceId = descriptor.getTrimmedResourceId();
 
         const child = <FunctionNode>this.children.find(c => c.resourceId.toLowerCase() === resourceId.toLowerCase());

@@ -1,3 +1,6 @@
+import { EmbeddedFunctionsEnvironment } from './embedded-functions.environment';
+import { PortalService } from './../portal.service';
+import { AzureTryEnvironment } from './azure-try.environment';
 import { TranslateService } from '@ngx-translate/core';
 import { LogService } from './../log.service';
 import { NationalCloudEnvironment } from './national-cloud.environment';
@@ -20,10 +23,15 @@ export class ScenarioService {
         new StandaloneEnvironment(),
         new SiteSlotEnvironment(this._translateService),
         new DynamicSiteEnvironment(this._translateService),
-        new LinuxSiteEnvironment(this._translateService)
+        new LinuxSiteEnvironment(this._translateService),
+        new AzureTryEnvironment(),
+        new EmbeddedFunctionsEnvironment(this._portalService)
     ];
 
-    constructor(private _logService: LogService, private _translateService: TranslateService) {
+    constructor(
+        private _logService: LogService,
+        private _translateService: TranslateService,
+        private _portalService: PortalService) {
 
         // National cloud environments inherit from AzureEnvironment so we ensure there
         // aren't duplicates to reduce the chance of conflicts in behavior.

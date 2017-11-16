@@ -1,4 +1,4 @@
-import { SiteDescriptor } from 'app/shared/resourceDescriptors';
+import { ArmSiteDescriptor } from 'app/shared/resourceDescriptors';
 import { FunctionsService, FunctionAppContext } from './../shared/services/functions-service';
 import { DashboardType } from 'app/tree-view/models/dashboard-type';
 import { ErrorIds } from './../shared/models/error-ids';
@@ -39,6 +39,8 @@ export class FunctionsListComponent implements OnDestroy {
         private _functionsService: FunctionsService,
         private _injector: Injector) {
 
+            console.log("FUNCTIONSLISTCOMPONENT!");
+
         this._broadcastService.getEvents<TreeViewInfo<void>>(BroadcastEvent.TreeNavigation)
             .filter(viewInfo => viewInfo.dashboardType === DashboardType.FunctionsDashboard)
             .takeUntil(this._ngUnsubscribe)
@@ -47,7 +49,7 @@ export class FunctionsListComponent implements OnDestroy {
                 this.isLoading = true;
                 this._functionsNode = (<FunctionsNode>viewInfo.node);
                 this.appNode = (<AppNode>viewInfo.node.parent);
-                const descriptor = new SiteDescriptor(viewInfo.resourceId);
+                const descriptor = new ArmSiteDescriptor(viewInfo.resourceId);
                 return this._functionsService.getAppContext(descriptor.getTrimmedResourceId());
             })
             .switchMap(context => {

@@ -1,3 +1,4 @@
+import { ArmService } from './../shared/services/arm.service';
 import { FileUtilities } from './../shared/Utilities/file';
 import { EditModeHelper } from './../shared/Utilities/edit-mode.helper';
 import { ConfigService } from './../shared/services/config.service';
@@ -106,6 +107,7 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
         private _globalStateService: GlobalStateService,
         private _translateService: TranslateService,
         private _aiService: AiService,
+        private _armService: ArmService,
         configService: ConfigService,
         cd: ChangeDetectorRef) {
 
@@ -136,13 +138,17 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
         this.functionSelectStream
             .switchMap(fi => {
                 this.functionApp = fi.functionApp;
-                this.disabled = this.functionApp.getFunctionAppEditMode().map(EditModeHelper.isReadOnly);
                 this._globalStateService.setBusyState();
-                this.checkErrors(fi);
 
-                this.functionApp.getEventGridKey().subscribe(eventGridKey => {
-                    this.eventGridSubscribeUrl = `${this.functionApp.getMainSiteUrl().toLowerCase()}/admin/extensions/EventGridExtensionConfig?functionName=${fi.name}&code=${eventGridKey}`;;
-                });
+                // TODO: ellhamai - probably need to reenable this
+                if (!this._portalService.isEmbeddedFunctions) {
+                    this.disabled = this.functionApp.getFunctionAppEditMode().map(EditModeHelper.isReadOnly);
+
+                    this.checkErrors(fi);
+                    this.functionApp.getEventGridKey().subscribe(eventGridKey => {
+                        this.eventGridSubscribeUrl = `${this.functionApp.getMainSiteUrl().toLowerCase()}/admin/extensions/EventGridExtensionConfig?functionName=${fi.name}&code=${eventGridKey}`;;
+                    });
+                }
 
                 return Observable.zip(
                     fi.clientOnly || this.functionApp.isMultiKeySupported ? Observable.of({}) : this.functionApp.getSecrets(fi),
@@ -167,6 +173,12 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
                 this._globalStateService.clearBusyState();
                 this.fileName = res.functionInfo.script_href.substring(res.functionInfo.script_href.lastIndexOf('/') + 1);
                 let href = res.functionInfo.script_href;
+
+                // TODO: ellhamai - The RP is returning the URL of the SCM site where it should return the RP files URL
+                if (this._portalService.isEmbeddedFunctions) {
+                    const parts = href.split('/');
+                    href = `${this._armService.armUrl}/${this.functionApp.site.id}/functions/${res.functionInfo.name}/files/${parts[parts.length - 1]}`;
+                }
 
                 if (FileUtilities.isBinary(this.fileName)) {
                     this.fileName = res.functionInfo.config_href.substring(res.functionInfo.config_href.lastIndexOf('/') + 1);
@@ -201,7 +213,10 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
                 } else {
                     delete this.authLevel;
                 }
-                this.updateKeys();
+
+                if(!this._portalService.isEmbeddedFunctions){
+                    this.updateKeys();
+                }
 
                 this.isHttpFunction = BindingManager.isHttpFunction(this.functionInfo);
                 this.isEventGridFunction = BindingManager.isEventGridFunction(this.functionInfo);

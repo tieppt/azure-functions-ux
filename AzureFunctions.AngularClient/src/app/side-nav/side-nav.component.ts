@@ -1,5 +1,4 @@
-import { EventsNode } from './../tree-view/events-node';
-// import { FunctionsService } from './../shared/services/functions-service';
+import { EmbeddedFunctionsNode } from './../tree-view/embedded-functions-node';
 import { ScenarioService } from './../shared/services/scenario/scenario.service';
 import { LogService } from './../shared/services/log.service';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -216,13 +215,13 @@ export class SideNavComponent implements AfterViewInit, OnDestroy {
 
             const resourceIdMatch = /\/resources([a-z0-9\-\/]+)/gi.exec(this.router.url);
 
-            if(resourceIdMatch && resourceIdMatch.length > 1){
-                const resourceId = `/providers/microsoft.web${resourceIdMatch[1]}`;
-                
-                    this.rootNode.children = [new EventsNode(this, this.rootNode, resourceId)];
-                    this.rootNode.isExpanded = true;
-                
-            }else{
+            if (resourceIdMatch && resourceIdMatch.length > 1) {
+                const resourceId = `/providers/Microsoft.BlueRidge${resourceIdMatch[1]}`;
+                const functionsNode = new EmbeddedFunctionsNode(this, this.rootNode, resourceId);
+                this.rootNode.children = [functionsNode];
+                this.rootNode.isExpanded = true;
+                functionsNode.toggle(null);
+            } else {
                 // log error
             }
 

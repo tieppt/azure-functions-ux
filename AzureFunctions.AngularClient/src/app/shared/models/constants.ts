@@ -100,8 +100,6 @@ export class Regex {
     public static readonly invalidEntityName: RegExp = /[^\u00BF-\u1FFF\u2C00-\uD7FF\a-zA-Z0-9-]/;//matches any character(i.e. german, chinese, english) or -
     public static readonly header: RegExp = /^[a-zA-Z0-9\-_]+$/;
     public static readonly functionName: RegExp = /^[a-zA-Z][a-zA-Z0-9_\-]{0,127}$/;
-    // public static readonly cdsEntityIdParts = /\/.+\/providers\/microsoft\.web\/environments\/([a-z0-9\-]+)\/namespaces\/([a-z0-9\-]+)\/entities\/([a-z0-9\-]+)$/gi;
-    // public static readonly cdsNamespaceId = /.*(\/environments\/[a-z0-9\-]+\/namespaces\/[a-z0-9\-]+\/entities\/[a-z0-9\-]+)/gi;
 }
 
 export class Links {

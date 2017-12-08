@@ -1,4 +1,4 @@
-import { ArmService } from './../shared/services/arm.service';
+// import { ArmService } from './../shared/services/arm.service';
 import { FileUtilities } from './../shared/Utilities/file';
 import { EditModeHelper } from './../shared/Utilities/edit-mode.helper';
 import { ConfigService } from './../shared/services/config.service';
@@ -36,6 +36,7 @@ import { RunHttpComponent } from '../run-http/run-http.component';
 import { ErrorIds } from '../shared/models/error-ids';
 import { HttpRunModel } from '../shared/models/http-run';
 import { FunctionKeys } from '../shared/models/function-key';
+import { ArmEmbeddedService } from 'app/shared/services/arm-embedded.service';
 
 
 @Component({
@@ -107,7 +108,7 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
         private _globalStateService: GlobalStateService,
         private _translateService: TranslateService,
         private _aiService: AiService,
-        private _armService: ArmService,
+        // private _armService: ArmService,
         configService: ConfigService,
         cd: ChangeDetectorRef) {
 
@@ -171,23 +172,26 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
                 }
 
                 this._globalStateService.clearBusyState();
-                this.fileName = res.functionInfo.script_href.substring(res.functionInfo.script_href.lastIndexOf('/') + 1);
-                let href = res.functionInfo.script_href;
+
+                let script_href = res.functionInfo.script_href;
 
                 // TODO: ellhamai - The RP is returning the URL of the SCM site where it should return the RP files URL
                 if (this._portalService.isEmbeddedFunctions) {
-                    const parts = href.split('/');
-                    href = `${this._armService.armUrl}/${this.functionApp.site.id}/functions/${res.functionInfo.name}/files/${parts[parts.length - 1]}`;
+                    script_href = `${ArmEmbeddedService.url}${script_href}`.replace('accountfunctions', 'account/functions');
+                    // const parts = href.split('/');
+                    // href = `${this._armService.armUrl}/${this.functionApp.site.id}/functions/${res.functionInfo.name}/files/${parts[parts.length - 1]}`;
                 }
 
+                this.fileName = script_href.substring(script_href.lastIndexOf('/') + 1);
+                
                 if (FileUtilities.isBinary(this.fileName)) {
                     this.fileName = res.functionInfo.config_href.substring(res.functionInfo.config_href.lastIndexOf('/') + 1);
-                    href = res.functionInfo.config_href;
+                    script_href = res.functionInfo.config_href;
                 }
 
                 this.scriptFile = this.scriptFile && this.functionInfo && this.functionInfo.href === res.functionInfo.href
                     ? this.scriptFile
-                    : { name: this.fileName, href: href, mime: 'file' };
+                    : { name: this.fileName, href: script_href, mime: 'file' };
                 this.selectedFileStream.next(this.scriptFile);
                 this.functionInfo = res.functionInfo;
                 this.setInvokeUrlVisibility();

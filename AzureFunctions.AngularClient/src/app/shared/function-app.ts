@@ -151,7 +151,14 @@ export class FunctionApp {
         this._slotsService = injector.get(SiteService);
         this._portalService = injector.get(PortalService);
 
-        this._http = new NoCorsHttpService(this._cacheService, this._ngHttp, this._broadcastService, this._aiService, this._translateService, () => this.getPortalHeaders());
+        this._http = new NoCorsHttpService(
+            this._cacheService,
+            this._ngHttp,
+            this._broadcastService,
+            this._aiService,
+            this._translateService,
+            this._armService,
+            () => this.getPortalHeaders());
 
         if (!this._globalStateService.showTryView) {
             this._userService.getStartupInfo()
@@ -340,7 +347,10 @@ export class FunctionApp {
         const fileHref = typeof file === 'string' ? file : file.href;
         const fileName = this.getFileName(file);
         return this._http.get(fileHref, { headers: this.getScmSiteHeaders() })
-            .map(r => r.text())
+            .map(r => {
+                return r.text();
+            }
+            )
             .do(_ => this._broadcastService.broadcast<string>(BroadcastEvent.ClearError, ErrorIds.unableToRetrieveFileContent + fileName),
             (error: FunctionsResponse) => {
                 if (!error.isHandled) {

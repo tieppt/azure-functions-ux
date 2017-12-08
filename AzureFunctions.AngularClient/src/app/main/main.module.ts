@@ -54,17 +54,9 @@ const routing: ModuleWithProviders = RouterModule.forChild([
                 loadChildren: 'app/proxies.module#ProxiesModule'
             },
             {
-                path: 'providers/microsoft.web/environments/:environmentId/namespaces/:namespaceId/entities/:entityId/functions',
+                path: 'providers/microsoft.blueridge/environments/:environmentId/scopes/:scope/entities/:entityId/functions',
                 loadChildren: 'app/functions.module#FunctionsModule'
             },
-            // {
-            //     path: 'functions',
-            //     loadChildren: 'app/functions.module#FunctionsModule'
-            // },
-            // {
-            //     path: 'environments/:environmentId/namespaces/:namespaceId/functions',
-            //     loadChildren: 'app/functions.module#FunctionsModule'
-            // },
             {
                 path: '**',
                 component: EmptyDashboardComponent

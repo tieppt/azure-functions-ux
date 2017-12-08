@@ -1,3 +1,4 @@
+import { ArmService } from './services/arm.service';
 import { CacheService } from './services/cache.service';
 import { Http, RequestOptionsArgs, Response, ResponseType, Headers } from '@angular/http';
 import { TranslateService } from '@ngx-translate/core';
@@ -20,6 +21,7 @@ export class NoCorsHttpService {
         private _broadcastService: BroadcastService,
         private _aiService: AiService,
         private _translateService: TranslateService,
+        private _armService: ArmService,
         private portalHeadersCallback: () => Headers) { }
 
     request(url: string, options: RequestOptionsArgs, force?: boolean): Observable<Response> {
@@ -129,7 +131,8 @@ export class NoCorsHttpService {
                         body: body,
                         headers: headers
                     };
-                    return this._http.post('/api/passthrough', passThroughBody, { headers: this.portalHeadersCallback() })
+
+                    return this._armService.send('POST', '/api/passthrough', passThroughBody, null, this.portalHeadersCallback())
                         .catch((e: FunctionsResponse) => {
                             if (e.status === 400) {
                                 let content: { reason: string, exception: any } = null;

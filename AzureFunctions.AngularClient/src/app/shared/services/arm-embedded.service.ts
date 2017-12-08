@@ -11,11 +11,11 @@ import { ArmService } from './arm.service';
 
 @Injectable()
 export class ArmEmbeddedService extends ArmService {
-    // private _envsExp = /.+\/environments\/(\w+)\/namespaces\/(\w+)$/gi;
-    // private _envResourceIdExp = /.+(\/environments\/\w+\/namespaces\/\w+)$/gi;
+    public static url = 'https://blueridge-tip1-rp-westus.azurewebsites.net';
 
-    private _whiteListedPrefixUrls: string[] = [
-        `https://blueridge-tip1-rp-westus.azurewebsites.net`
+    private _whitelistedRPPrefixUrls: string[] = [
+        ArmEmbeddedService.url,
+        '/api/passthrough'
     ];
 
     constructor(http: Http,
@@ -29,12 +29,6 @@ export class ArmEmbeddedService extends ArmService {
         const urlNoQuery = url.toLowerCase().split('?')[0];
         const path = Url.getPath(urlNoQuery);
         const pathParts = path.split('/').filter(part => !!part);
-
-        // const entityMatches = /(\/providers\/microsoft.web\/[a-z0-9\-\/]+\/entities\/([a-z0-9\-]+))$/gi.exec(urlNoQuery);
-
-        // if (entityMatches && entityMatches.length > 2) {
-        //     return this._getFakeSiteObj(entityMatches);
-        // }
 
         if (pathParts.length === 8 && pathParts[6] === 'entities') {
             return this._getFakeSiteObj(path, pathParts[7]);
@@ -51,8 +45,47 @@ export class ArmEmbeddedService extends ArmService {
             }));
         }
 
-        if (this._whiteListedPrefixUrls.find(u => urlNoQuery.startsWith(u.toLowerCase()) || urlNoQuery.endsWith('.svg'))) {
+        if (urlNoQuery.toLowerCase().endsWith('.svg')) {
             return super.send(method, url, body, etag, headers);
+        }
+
+        if (this._whitelistedRPPrefixUrls.find(u => urlNoQuery.startsWith(u.toLowerCase()))) {
+            return super.send(method, url, body, etag, headers)
+                .map(r => {
+                    // Calls to Function management API's for embedded scenario's are wrapped with a standard API payload.
+                    // To keep the code somewhat clean, we intercept the response and unwrap each payload so that it looks as
+                    // similar as possible to Azure scenario's.  Not everything will be a one-to-one mapping between the two scenario's 
+                    // but should have similar structure.
+
+                    const response = r.json();
+                    if (response.values) {
+                        const values = response.values.map(v => {
+                            const payload = v.properties;
+
+                            // TODO: ellhamai - The API moved name to the wrapper payload.  I hope we can just duplicate it back to properties
+                            payload.name = v.name;
+                            return payload;
+                        });
+
+                        return this._getFakeResponse(values);
+
+                    } else if (response.properties) {
+                        const payload = response.properties;
+
+                        // File content API is a special case because it is normally a string response in Azure, but it's
+                        // wrapped as a subproperty in blueridge
+                        if (payload.content) {
+                            return this._getFakeResponse(null, payload.content);
+                        } else {
+                            // TODO: ellhamai - The API moved name to the wrapper payload.  I hope we can just duplicate it back to properties
+                            payload.name = response.name;
+                        }
+
+                        return this._getFakeResponse(response.properties);
+                    }
+
+                    return r;
+                });
         }
 
         // const envsExpMatches = Regex.cdsEntityIdParts.exec(urlNoQuery);
@@ -92,9 +125,7 @@ export class ArmEmbeddedService extends ArmService {
     }
 
     private _getFakeSiteObj(id: string, name: string) {
-        // const url = envMatches[0];
 
-        // const idMatches = /.*(\/environments\/[a-z0-9\-]+\/namespaces\/[a-z0-9\-]+\/entities\/[a-z0-9\-]+)/gi.exec(url);
         return Observable.of(this._getFakeResponse({
             id: id,
             name: name,
@@ -105,7 +136,7 @@ export class ArmEmbeddedService extends ArmService {
         }));
     }
 
-    private _getFakeResponse(jsonObj: any): any {
+    private _getFakeResponse(jsonObj: any, text?: string): any {
         return {
             headers: {
                 get: () => {
@@ -114,9 +145,11 @@ export class ArmEmbeddedService extends ArmService {
             },
             json: () => {
                 return jsonObj;
+            },
+            text: () => {
+                return text;
             }
         };
     }
-
-
 }
+

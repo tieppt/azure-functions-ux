@@ -68,7 +68,7 @@ export class ArmResourceDescriptor extends Descriptor {
 
 export class CdsEntityDescriptor extends Descriptor {
     public environment: string;
-    public namespace: string;
+    public scope: string;
     public entity: string;
 
     constructor(resourceId: string) {
@@ -79,12 +79,12 @@ export class CdsEntityDescriptor extends Descriptor {
         }
 
         this.environment = this.parts[3];
-        this.namespace = this.parts[5];
+        this.scope = this.parts[5];
         this.entity = this.parts[7];
     }
 
     getTrimmedResourceId() {
-        return `/providers/microsoft.web/environments/${this.environment}/namespaces/${this.namespace}/entities/${this.entity}`;
+        return `/providers/Microsoft.Blueridge/environments/${this.environment}/scopes/${this.scope}/entities/${this.entity}`;
     }
 }
 

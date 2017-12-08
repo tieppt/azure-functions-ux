@@ -1,3 +1,4 @@
+import { ArmService } from './arm.service';
 import { PortalService } from './portal.service';
 import { TryFunctionsService } from './try-functions.service';
 import { ApiProxy } from './../models/api-proxy';
@@ -59,9 +60,17 @@ export class FunctionsService {
         private _siteService: SiteService,
         private _tryFunctionsService: TryFunctionsService,
         private _portalService: PortalService,
+        private _armService: ArmService,
         private _injector: Injector) {
 
-        this._http = new NoCorsHttpService(this._cacheService, this._ngHttp, this._broadcastService, this._aiService, this._translateService, () => this._getPortalHeaders());
+        this._http = new NoCorsHttpService(
+            this._cacheService,
+            this._ngHttp,
+            this._broadcastService,
+            this._aiService,
+            this._translateService,
+            this._armService,
+            () => this._getPortalHeaders());
 
         this._userService.getStartupInfo()
             .subscribe(info => {
@@ -105,8 +114,20 @@ export class FunctionsService {
             .retryWhen(this.retryAntares)
             .map((r: Response) => {
                 try {
-                    fcs = r.json() as FunctionInfo[];
-                    fcs.forEach(fc => fc.context = context);
+                    const collection = r.json();
+
+                    fcs = collection.map(item => {
+                        let fc: FunctionInfo;
+                        if (item.properties) {
+                            fc = item.properties.function;
+                        } else {
+                            fc = item;
+                        }
+
+                        fc.context = context;
+                        return fc;
+                    });
+
                     return fcs;
                 } catch (e) {
                     // We have seen this happen when kudu was returning JSON that contained

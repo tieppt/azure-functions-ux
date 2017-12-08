@@ -1,10 +1,10 @@
-// import { ArmService } from './services/arm.service';
+import { ArmEmbeddedService } from './services/arm-embedded.service';
 import { ArmUtil } from 'app/shared/Utilities/arm-utils';
 import { ConfigService } from 'app/shared/services/config.service';
 import { PortalService } from './services/portal.service';
 import { Injector } from '@angular/core';
-import { ArmObj } from "app/shared/models/arm/arm-obj";
-import { Site } from "app/shared/models/arm/site";
+import { ArmObj } from 'app/shared/models/arm/arm-obj';
+import { Site } from 'app/shared/models/arm/site';
 
 export class UrlTemplates {
     private configService: ConfigService;
@@ -12,16 +12,16 @@ export class UrlTemplates {
     private scmUrl: string;
     private mainSiteUrl: string;
     private useNewUrls: boolean;
-    // private armService: ArmService;
+    private isEmbeddedFunctions: boolean;
 
-    constructor(private site: ArmObj<Site>, injector: Injector){
+    constructor(private site: ArmObj<Site>, injector: Injector) {
 
         this.portalService = injector.get(PortalService);
         this.configService = injector.get(ConfigService);
-        // this.armService = injector.get(ArmService);
 
-        this.scmUrl = this.portalService.isEmbeddedFunctions ? null : this._getScmUrl(site);
-        this.mainSiteUrl = this.portalService.isEmbeddedFunctions ? null : this._getMainUrl(site);
+        this.isEmbeddedFunctions = this.portalService.isEmbeddedFunctions;
+        this.scmUrl = this.isEmbeddedFunctions ? null : this._getScmUrl(site);
+        this.mainSiteUrl = this.isEmbeddedFunctions ? null : this._getMainUrl(site);
 
         this.useNewUrls = ArmUtil.isLinuxApp(this.site);
     }
@@ -43,10 +43,13 @@ export class UrlTemplates {
     }
 
     get functionsUrl(): string {
-        return "https://blueridge-tip1-rp-westus.azurewebsites.net/providers/microsoft.web/environments/0fb7e803-94aa-4e69-9694-d3b3cea74523/namespaces/5d5374aa-0df3-421c-9656-5244ac88593c/entities/Account/functions";
-        // return this.useNewUrls
-        //     ? `${this.mainSiteUrl}/admin/functions`
-        //     : `${this.scmUrl}/api/functions`;
+        if (this.isEmbeddedFunctions) {
+            return `${ArmEmbeddedService.url}${this.site.id}/functions`;
+        }
+
+        return this.useNewUrls
+            ? `${this.mainSiteUrl}/admin/functions`
+            : `${this.scmUrl}/api/functions`;
     }
 
     get proxiesJsonUrl(): string {

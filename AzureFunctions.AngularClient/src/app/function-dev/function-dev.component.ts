@@ -36,8 +36,6 @@ import { RunHttpComponent } from '../run-http/run-http.component';
 import { ErrorIds } from '../shared/models/error-ids';
 import { HttpRunModel } from '../shared/models/http-run';
 import { FunctionKeys } from '../shared/models/function-key';
-import { ArmEmbeddedService } from 'app/shared/services/arm-embedded.service';
-
 
 @Component({
     selector: 'function-dev',
@@ -174,14 +172,6 @@ export class FunctionDevComponent implements OnChanges, OnDestroy {
                 this._globalStateService.clearBusyState();
 
                 let script_href = res.functionInfo.script_href;
-
-                // TODO: ellhamai - The RP is returning the URL of the SCM site where it should return the RP files URL
-                if (this._portalService.isEmbeddedFunctions) {
-                    script_href = `${ArmEmbeddedService.url}${script_href}`.replace('accountfunctions', 'account/functions');
-                    // const parts = href.split('/');
-                    // href = `${this._armService.armUrl}/${this.functionApp.site.id}/functions/${res.functionInfo.name}/files/${parts[parts.length - 1]}`;
-                }
-
                 this.fileName = script_href.substring(script_href.lastIndexOf('/') + 1);
                 
                 if (FileUtilities.isBinary(this.fileName)) {

@@ -981,11 +981,13 @@ export class FunctionApp {
         ClearAllFunctionCache(fi);
         const fiCopy = <FunctionInfo>{};
         for (const prop in fi) {
-            if (fi.hasOwnProperty(prop) && prop !== 'functionApp') {
-                fiCopy[prop] = fi[prop];
+            if (fi.hasOwnProperty(prop)) {
+                if (prop !== 'functionApp' && prop !== 'context') {
+                    fiCopy[prop] = fi[prop];
+                }
             }
         }
-        return this._http.put(fi.href, JSON.stringify(fiCopy), { headers: this.getScmSiteHeaders() })
+        return this._http.put(fi.href, fiCopy, { headers: this.getScmSiteHeaders() })
             .map(r => <FunctionInfo>r.json())
             .do(_ => this._broadcastService.broadcast<string>(BroadcastEvent.ClearError, ErrorIds.unableToUpdateFunction + fi.name),
             (error: FunctionsResponse) => {

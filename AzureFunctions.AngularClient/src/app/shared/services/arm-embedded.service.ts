@@ -1,3 +1,6 @@
+import { FunctionInfo } from './../models/function-info';
+import { ArmArrayResult } from './../models/arm/arm-obj';
+import { NoCorsHttpService } from './../no-cors-http-service';
 import { Url } from './../Utilities/url';
 // import { Regex } from './../models/constants';
 import { Observable } from 'rxjs/Observable';
@@ -15,7 +18,7 @@ export class ArmEmbeddedService extends ArmService {
 
     private _whitelistedRPPrefixUrls: string[] = [
         ArmEmbeddedService.url,
-        '/api/passthrough'
+        NoCorsHttpService.passThroughUrl
     ];
 
     constructor(http: Http,
@@ -26,12 +29,12 @@ export class ArmEmbeddedService extends ArmService {
     }
 
     send(method: string, url: string, body?: any, etag?: string, headers?: Headers): Observable<Response> {
-        const urlNoQuery = url.toLowerCase().split('?')[0];
+        let urlNoQuery = url.toLowerCase().split('?')[0];
         const path = Url.getPath(urlNoQuery);
         const pathParts = path.split('/').filter(part => !!part);
 
         if (pathParts.length === 8 && pathParts[6] === 'entities') {
-            return this._getFakeSiteObj(path, pathParts[7]);
+            return Observable.of(this._getFakeSiteObj(path, pathParts[7]));
         }
 
         if (urlNoQuery.endsWith('/config/authsettings/list')) {
@@ -45,27 +48,34 @@ export class ArmEmbeddedService extends ArmService {
             }));
         }
 
-        if (urlNoQuery.toLowerCase().endsWith('.svg')) {
+        if (urlNoQuery.endsWith('.svg')) {
             return super.send(method, url, body, etag, headers);
         }
 
         if (this._whitelistedRPPrefixUrls.find(u => urlNoQuery.startsWith(u.toLowerCase()))) {
+
+            // If we're sending a body to the RP or our passthrough, then we need to wrap it
+            body = this._wrapPayloadIfNecessary(path, body, urlNoQuery);
+
             return super.send(method, url, body, etag, headers)
                 .map(r => {
                     // Calls to Function management API's for embedded scenario's are wrapped with a standard API payload.
                     // To keep the code somewhat clean, we intercept the response and unwrap each payload so that it looks as
                     // similar as possible to Azure scenario's.  Not everything will be a one-to-one mapping between the two scenario's 
                     // but should have similar structure.
-
+                    urlNoQuery = this._getActualUrlNoQuery(urlNoQuery, body);
                     const response = r.json();
-                    if (response.values) {
-                        const values = response.values.map(v => {
-                            const payload = v.properties;
+                    if (response.value) {
 
-                            // TODO: ellhamai - The API moved name to the wrapper payload.  I hope we can just duplicate it back to properties
-                            payload.name = v.name;
+                        if (urlNoQuery.endsWith('/functions')) {
+                            return this._getFakeFunctionsResponse(urlNoQuery, response);
+                        }
+
+                        const values = response.value.map(v => {
+                            const payload = v.properties;
                             return payload;
                         });
+
 
                         return this._getFakeResponse(values);
 
@@ -76,9 +86,6 @@ export class ArmEmbeddedService extends ArmService {
                         // wrapped as a subproperty in blueridge
                         if (payload.content) {
                             return this._getFakeResponse(null, payload.content);
-                        } else {
-                            // TODO: ellhamai - The API moved name to the wrapper payload.  I hope we can just duplicate it back to properties
-                            payload.name = response.name;
                         }
 
                         return this._getFakeResponse(response.properties);
@@ -88,35 +95,6 @@ export class ArmEmbeddedService extends ArmService {
                 });
         }
 
-        // const envsExpMatches = Regex.cdsEntityIdParts.exec(urlNoQuery);
-        // } else if (urlNoQuery.endsWith('/providers/microsoft.authorization/permissions')) {
-        //     return Observable.of(this._getFakeResponse({
-        //         'value': [{
-        //             'actions': ['*'],
-        //             'notActions': []
-        //         }],
-        //         'nextLink': null
-        //     }));
-        // } else if (urlNoQuery.endsWith('/providers/microsoft.authorization/locks')) {
-        //     return Observable.of(this._getFakeResponse({ 'value': [] }));
-        // } else if (urlNoQuery.endsWith('/config/web')) {
-        //     return Observable.of(<any>this._getFakeResponse({
-        //         id: this._tryFunctionApp.site.id,
-        //         properties: {
-        //             scmType: 'None'
-        //         }
-        //     }));
-        // } else if (urlNoQuery.endsWith('/appsettings/list')) {
-        //     return this.tryFunctionApp.getFunctionContainerAppSettings()
-        //         .map(r => {
-        //             return this._getFakeResponse({
-        //                 properties: r
-        //             });
-        //         });
-        // } else if (urlNoQuery.endsWith('/slots')) {
-        //     return Observable.of(this._getFakeResponse({ value: [] }));
-        // }
-
         this._aiService.trackEvent('/try/arm-send-failure', {
             uri: url
         });
@@ -124,16 +102,84 @@ export class ArmEmbeddedService extends ArmService {
         throw new Error('[ArmTryService] - send: ' + url);
     }
 
+    private _getActualUrlNoQuery(urlNoQuery: string, body?: any) {
+        if (urlNoQuery === NoCorsHttpService.passThroughUrl.toLowerCase()
+            && body
+            && body.url) {
+            return body.url;
+        }
+
+        return urlNoQuery;
+    }
+
+    // TODO: ellhamai - need to cleanup this function and add support for setting file content API content-type header.
+    private _wrapPayloadIfNecessary(id: string, body: any, urlNoQuery: string) {
+
+        if (urlNoQuery.toLowerCase() === NoCorsHttpService.passThroughUrl.toLowerCase() && body && body.body) {
+            const pathParts = body.url.split('/').filter(part => !!part);
+            body = JSON.parse(JSON.stringify(body));
+
+            if (pathParts[pathParts.length - 2].toLowerCase() === 'files') {
+                body.body = {
+                    properties: {
+                        content: body.body
+                    }
+                };
+                body.headers['Content-Type'] = 'application/json';
+            } else {
+                body.body = {
+                    properties: body.body
+                };
+
+            }
+
+        } else if (urlNoQuery.toLowerCase() !== NoCorsHttpService.passThroughUrl.toLowerCase() && body) {
+            const pathParts = id.split('/').filter(part => !!part);
+            body = JSON.parse(JSON.stringify(body));
+            if (pathParts[pathParts.length - 2].toLowerCase() === 'files') {
+                body = {
+                    properties: {
+                        content: body
+                    }
+                };
+            } else {
+                body = {
+                    properties: body
+                };
+            }
+        }
+
+        return body;
+    }
+
     private _getFakeSiteObj(id: string, name: string) {
 
-        return Observable.of(this._getFakeResponse({
+        return this._getFakeResponse({
             id: id,
             name: name,
             kind: 'functionapp',
             properties: {
 
             }
-        }));
+        });
+    }
+
+    private _getFakeFunctionsResponse(urlNoQuery: string, functionObjs: ArmArrayResult<FunctionInfo>) {
+        const hostName = Url.getHostName(urlNoQuery);
+
+        const fcs = functionObjs.value.map(functionObj => {
+            const f = functionObj.properties;
+
+            f.script_root_path_href = `https://${hostName}${functionObj.id}`;
+            f.script_href = `https://${hostName}${f.script_href}`;
+            f.config_href = `${f.script_root_path_href}function.json`;
+            f.secrets_file_href = null;
+            f.href = `${urlNoQuery}/${f.name}`;
+
+            return f;
+        });
+
+        return this._getFakeResponse(fcs);
     }
 
     private _getFakeResponse(jsonObj: any, text?: string): any {

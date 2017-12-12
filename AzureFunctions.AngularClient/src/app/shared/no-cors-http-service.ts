@@ -15,6 +15,8 @@ import { FunctionsResponse } from './models/functions-response';
 import { BroadcastEvent } from './models/broadcast-event';
 
 export class NoCorsHttpService {
+    static readonly passThroughUrl = '/api/passthrough';
+
     constructor(
         private _cacheService: CacheService,
         private _http: Http,
@@ -132,7 +134,7 @@ export class NoCorsHttpService {
                         headers: headers
                     };
 
-                    return this._armService.send('POST', '/api/passthrough', passThroughBody, null, this.portalHeadersCallback())
+                    return this._armService.send('POST', NoCorsHttpService.passThroughUrl, passThroughBody, null, this.portalHeadersCallback())
                         .catch((e: FunctionsResponse) => {
                             if (e.status === 400) {
                                 let content: { reason: string, exception: any } = null;

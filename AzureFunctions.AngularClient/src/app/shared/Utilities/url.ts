@@ -54,4 +54,11 @@ export class Url {
         l.href = url;
         return l.pathname;
     }
+
+    public static getHostName(url: string){
+        const l = document.createElement('a');
+        l.href = url;
+        return l.hostname;
+    }
+
 }

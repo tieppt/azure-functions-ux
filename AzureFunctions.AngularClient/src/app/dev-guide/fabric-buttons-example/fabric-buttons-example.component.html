@@ -1,0 +1,251 @@
+<section class="example">
+    <h2>Fabric Buttons</h2>
+    <div class="header" #header>
+        <label>
+            <input type="checkbox" [checked]="replacePropsOnToggle" (change)="replacePropsOnToggle = !replacePropsOnToggle" />
+            Replace Props On Toggle?
+        </label>
+
+        <button class="custom-button" (click)="toggleDisabled()">Toggle Disabled</button>
+        <button class="custom-button" (click)="toggleText()">Toggle Text</button>
+        <button class="custom-button" (click)="togglePrimary()">Toggle Primary</button>
+        <button class="custom-button" (click)="toggleOnClick()">Toggle OnClick</button>
+
+        <div class="state">
+            <div>{{ 'State:' }}</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp; {{ 'disabled: ' + disabled }}</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp; {{ 'text: ' + text }}</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp; {{ 'primary: ' + primary }}</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp; {{ 'color: ' + color }}</div>
+        </div>
+
+        <label>-- FabricButtonDirective (binding 'props' input to this.props) --</label>
+        <div class="bar"
+            fabric-button
+            [props]="props">
+        </div>
+
+        <label>-- FabricButtonDirective (binding 'props.*' inputs to this.* properties) --</label>
+        <div class="bar"
+            fabric-button
+            [props.styles]="styles"
+            [props.disabled]="disabled"
+            [props.text]="text"
+            [props.primary]="primary"
+            [props.onClick]="onClick">
+        </div>
+        
+        <label>-- FabricButtonDirective (binding 'props.*' inputs to this.props.* properties) --</label>
+        <div class="bar"
+            fabric-button
+            [props.styles]="props ? props.styles : null"
+            [props.disabled]="props ? props.disabled : null"
+            [props.text]="props ? props.text : null"
+            [props.primary]="props ? props.primary : null"
+            [props.onClick]="props ? props.onClick : null">
+        </div>
+
+        <label>-- FabricButtonDirective (binding 'props' and 'props.*' inputs to this.props and this.props.*) --</label>
+        <div class="bar"
+            fabric-button
+            [props]="props"
+            [props.styles]="props ? props.styles : null"
+            [props.disabled]="props ? props.disabled : null"
+            [props.text]="props ? props.text : null"
+            [props.primary]="props ? props.primary : null"
+            [props.onClick]="props ? props.onClick : null">
+        </div>
+    </div>
+    <figure>
+        <label>HTML</label>
+        <pre>
+
+    &lt;label&gt;
+        &lt;input type=&quot;checkbox&quot; [checked]=&quot;replacePropsOnToggle&quot; (change)=&quot;replacePropsOnToggle = !replacePropsOnToggle&quot; /&gt;
+        Replace Props On Toggle?
+    &lt;/label&gt;
+
+    &lt;button class=&quot;custom-button-invert&quot; (click)=&quot;toggleDisabled()&quot;&gt;Toggle Disabled&lt;/button&gt;
+    &lt;button class=&quot;custom-button-invert&quot; (click)=&quot;toggleText()&quot;&gt;Toggle Text&lt;/button&gt;
+    &lt;button class=&quot;custom-button-invert&quot; (click)=&quot;togglePrimary()&quot;&gt;Toggle Primary&lt;/button&gt;
+    &lt;button class=&quot;custom-button-invert&quot; (click)=&quot;toggleOnClick()&quot;&gt;Toggle OnClick&lt;/button&gt;
+
+    &lt;div class=&quot;state&quot;&gt;
+        &lt;div&gt;{{ 'State:' }}&lt;/div&gt;
+        &lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; {{ 'disabled: ' + disabled }}&lt;/div&gt;
+        &lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; {{ 'text: ' + text }}&lt;/div&gt;
+        &lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; {{ 'primary: ' + primary }}&lt;/div&gt;
+        &lt;div&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; {{ 'color: ' + color }}&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;label&gt;-- FabricButtonDirective (binding 'props' input to this.props) --&lt;/label&gt;
+    &lt;div
+        fabric-button
+        [props]=&quot;props&quot;&gt;
+    &lt;/div&gt;
+
+    &lt;label&gt;-- FabricButtonDirective (binding 'props.*' inputs to this.* properties) --&lt;/label&gt;
+    &lt;div
+        fabric-button
+        [props.text]=&quot;text&quot;
+        [props.primary]=&quot;primary&quot;
+        [props.onClick]=&quot;onClick&quot;&gt;
+    &lt;/div&gt;
+    
+    &lt;label&gt;-- FabricButtonDirective (binding 'props.*' inputs to this.props.* properties) --&lt;/label&gt;
+    &lt;div
+        fabric-button
+        [props.text]=&quot;this.props ? this.props.text : null&quot;
+        [props.primary]=&quot;this.props ? this.props.primary : null&quot;
+        [props.onClick]=&quot;this.props ? this.props.onClick : null&quot;&gt;
+    &lt;/div&gt;
+
+    &lt;label&gt;-- FabricButtonDirective (binding 'props' and 'props.*' inputs to this.props and this.props.*) --&lt;/label&gt;
+    &lt;div
+        fabric-button
+        [props]=&quot;props&quot;
+        [props.text]=&quot;this.props ? this.props.text : null&quot;
+        [props.primary]=&quot;this.props ? this.props.primary : null&quot;
+        [props.onClick]=&quot;this.props ? this.props.onClick : null&quot;&gt;
+    &lt;/div&gt;
+        </pre>
+
+        <label>TypeScript</label>
+        <pre>
+
+    export class TextboxExampleComponent {{ '{' }}
+        control: FormControl;
+    
+        constructor(fb: FormBuilder, translateService: TranslateService){{ '{' }}
+            const required = new RequiredValidator(translateService);
+            this.control = fb.control('', required.validate.bind(required));
+        {{ '}' }}
+    {{ '}' }}
+
+    export class FabricButtonsExampleComponent {{ '{' }}
+        public props: IButtonProps;
+    
+        public disabled: boolean;
+        public text: string;
+        public primary: boolean;
+        public onClick: (e) => void;
+        private _clickFuncChanged: boolean;
+    
+        public color: string;
+    
+        private _redColor: string;
+        private _greenColor: string;
+    
+        public replacePropsOnToggle: boolean;
+    
+        @ViewChild('header') header: ElementRef;zy
+    
+        constructor() {{ '{' }}
+            this.disabled = false;
+            this.text = 'OFF';
+            this.primary = true;
+            this.onClick = (e) => {{ '{' }} this._setColorRed(); {{ '}' }};
+            this._clickFuncChanged = false;
+    
+            this.color = 'default';
+    
+            this._redColor = 'red';
+            this._greenColor = 'green';
+    
+            this.replacePropsOnToggle = false;
+    
+            this.props = {{ '{' }}
+                text: this.text,
+                primary: this.primary,
+                onClick: this.onClick
+            {{ '}' }};
+        {{ '}' }}
+        
+        public toggleDisabled() {{ '{' }}
+            this.disabled = !this.disabled;
+    
+            if (this.replacePropsOnToggle) {{ '{' }}
+                this._overWriteProps();
+            {{ '}' }} else {{ '{' }}
+                this._updateProps(true, false, false, false);
+            {{ '}' }}
+        {{ '}' }}
+    
+        public toggleText() {{ '{' }}
+            this.text = (this.text === 'OFF') ? 'ON'  : 'OFF';
+    
+            if (this.replacePropsOnToggle) {{ '{' }}
+                this._overWriteProps();
+            {{ '}' }} else {{ '{' }}
+                this._updateProps(false, true, false, false);
+            {{ '}' }}
+        {{ '}' }}
+    
+        public togglePrimary() {{ '{' }}
+            this.primary = !this.primary;
+    
+            if (this.replacePropsOnToggle) {{ '{' }}
+                this._overWriteProps();
+            {{ '}' }} else {{ '{' }}
+                this._updateProps(false, false, true, false);
+            {{ '}' }}
+        {{ '}' }}
+    
+        public toggleOnClick() {{ '{' }}
+            if (this._clickFuncChanged) {{ '{' }}
+                this.onClick = (e) => {{ '{' }} this._setColorRed(); };
+            {{ '}' }} else {{ '{' }}
+                this.onClick = (e) => {{ '{' }} this._setColorGreen(); };
+            {{ '}' }}
+            this._clickFuncChanged = !this._clickFuncChanged;
+    
+            if (this.replacePropsOnToggle) {{ '{' }}
+                this._overWriteProps();
+            {{ '}' }} else {{ '{' }}
+                this._updateProps(false, false, false, true);
+            {{ '}' }}
+        {{ '}' }}
+    
+        private _setColorRed() {{ '{' }}
+            (this.header.nativeElement as HTMLElement).style.backgroundColor = this._redColor;
+            this.color = this._redColor;
+            this._redColor = this._redColor === 'red' ? 'darkred' : 'red';
+            console.log((this.header.nativeElement as HTMLElement).tagName);
+        {{ '}' }}
+    
+        private _setColorGreen() {{ '{' }}
+            (this.header.nativeElement as HTMLElement).style.backgroundColor = this._greenColor;
+            this.color = this._greenColor;
+            this._greenColor = this._greenColor === 'green' ? 'greenyellow' : 'green';
+            console.log((this.header.nativeElement as HTMLElement).tagName);
+        {{ '}' }}
+    
+        private _overWriteProps() {{ '{' }}
+            this.props = {{ '{' }}
+                disabled: this.disabled,
+                text: this.text,
+                primary: this.primary,
+                onClick: this.onClick
+            {{ '}' }};
+        {{ '}' }}
+    
+        private _updateProps(updateDisabled: boolean, updateText: boolean, updatePrimary: boolean, updateOnClick: boolean) {{ '{' }}
+            if (this.props) {{ '{' }}
+                if (updateDisabled) {{ '{' }}
+                    this.props.disabled = this.disabled;
+                {{ '}' }}
+                if (updateText) {{ '{' }}
+                    this.props.text = this.text;
+                {{ '}' }}
+                if (updatePrimary) {{ '{' }}
+                    this.props.primary = this.primary;
+                {{ '}' }}
+                if (updateOnClick) {{ '{' }}
+                    this.props.onClick = this.onClick;
+                {{ '}' }}
+            {{ '}' }}
+        {{ '}' }}
+    {{ '}' }}
+        </pre>
+    </figure>
+</section>

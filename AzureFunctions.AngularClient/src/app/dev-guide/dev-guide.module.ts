@@ -1,3 +1,4 @@
+import { FabricButtonsExampleComponent } from './fabric-buttons-example/fabric-buttons-example.component';
 import { EditableTblExampleComponent } from './editable-tbl-example/editable-tbl-example.component';
 import { TblExampleComponent } from './tbl-example/tbl-example.component';
 import { RadioSelectorExampleComponent } from './radio-selector-example/radio-selector-example.component';
@@ -39,7 +40,8 @@ const routing: ModuleWithProviders = RouterModule.forChild([
         TextboxExampleComponent,
         RadioSelectorExampleComponent,
         TblExampleComponent,
-        EditableTblExampleComponent
+        EditableTblExampleComponent,
+        FabricButtonsExampleComponent
     ],
     providers: []
 })

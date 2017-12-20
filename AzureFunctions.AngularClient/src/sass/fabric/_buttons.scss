@@ -1,0 +1,263 @@
+[fabric-button] {
+    .ms-Button.ms-Button--primary {
+        position: relative;
+        font-family: inherit;
+        //-webkit-font-smoothing: inherit;
+        font-weight: inherit;
+        box-sizing: inherit;
+        text-align: initial;
+        vertical-align: initial;
+        min-width: inherit;
+        height: initial;
+        user-select: initial;
+        outline: transparent;
+        border-width: 1px;
+        border-style: solid;
+        border-color: transparent;
+        text-decoration: initial;
+        border-radius: initial;
+
+        margin-left: 15px;
+        display: inline;
+        padding: 5px 45px 5px 45px;
+        font-size: 12px;
+        cursor: pointer;
+        background-image: none;
+        border: 1px solid transparent;
+        color: #fff;
+        background-color: #0058ad;
+
+        &.is-checked {
+            fill: none;
+        }
+
+        &.is-expanded {
+            fill: none;
+
+            &:hover {
+                fill: none;
+
+                .ms-Button-icon {
+                    fill: none;
+
+                }
+                .ms-Button-menuIcon {
+                    fill: none;
+
+                }
+            }
+        }
+
+        &.is-disabled {
+            fill: none;
+
+            background-color: rgba(127, 127, 127, 0.7);
+            cursor: disabled;
+
+        }
+
+        &:not(.is-disabled):not(.is-expanded):not(.is-checked) {
+            &:hover {
+                fill: none;
+
+                color: #fff;
+                background-color: #0072e0;
+                
+                .ms-Button-icon {
+                    fill: none;
+
+                }
+                .ms-Button-description {
+                    fill: none;
+
+                }
+                .ms-Button-menuIcon {
+                    fill: none;
+
+                }
+            }
+
+            &:focus {
+                fill: none;
+
+                outline: #00bcf2 dashed 1px;
+            }
+
+            &:active {
+                fill: none;
+
+                background-color: #003e7a;
+                
+                .ms-Button-icon {
+                    fill: none;
+
+                }
+                .ms-Button-description {
+                    fill: none;
+
+                }
+                .ms-Button-menuIcon {
+                    fill: none;
+
+                }
+            }
+        }
+        
+        &.is-disabled.is-checked {
+            fill: none;
+            
+        }
+
+        &:not(.is-disabled).is-checked {
+            &:hover {
+                fill: none;
+
+            }
+
+            &:focus {
+                fill: none;
+
+            }
+        }
+
+        .ms-Button-flexContainer {
+            fill: none;
+
+            display: inline-block;
+            height: initial;
+            flex-wrap: initial;
+            justify-content: initial;
+            align-items: initial;
+        }
+
+        .ms-Button-textContainer {
+            fill: none;
+
+            flex-grow: initial;
+        }
+
+        .ms-Button-label {
+            fill: none;
+
+            margin: 0px;
+            line-height: initial;
+            font-weight: inherit;
+        }
+    }
+}
+
+
+#app-root[theme=dark] {
+    [fabric-button] {
+        .ms-Button.ms-Button--primary {
+            color: #252525;
+            background-color: #4894fe;
+
+            &.is-checked {
+                fill: none;
+            }
+
+            &.is-expanded {
+                fill: none;
+
+                &:hover {
+                    fill: none;
+
+                    .ms-Button-icon {
+                        fill: none;
+
+                    }
+                    .ms-Button-menuIcon {
+                        fill: none;
+
+                    }
+                }
+            }
+
+            &.is-disabled {
+                fill: none;
+
+                background-color: #3f3e3e;
+                color: #727171;
+            }
+
+            &:not(.is-disabled):not(.is-expanded):not(.is-checked) {
+                &:hover {
+                    fill: none;
+
+                    //color: #252525;
+                    background-color: #7bb2fe;;
+                    
+                    .ms-Button-icon {
+                        fill: none;
+
+                    }
+                    .ms-Button-description {
+                        fill: none;
+
+                    }
+                    .ms-Button-menuIcon {
+                        fill: none;
+
+                    }
+                }
+
+                &:focus {
+                    fill: none;
+
+                }
+
+                &:active {
+                    fill: none;
+
+                    background-color: #1576fe;
+                    
+                    .ms-Button-icon {
+                        fill: none;
+
+                    }
+                    .ms-Button-description {
+                        fill: none;
+
+                    }
+                    .ms-Button-menuIcon {
+                        fill: none;
+
+                    }
+                }
+            }
+            
+            &.is-disabled.is-checked {
+                fill: none;
+                
+            }
+
+            &:not(.is-disabled).is-checked {
+                &:hover {
+                    fill: none;
+
+                }
+
+                &:focus {
+                    fill: none;
+
+                }
+            }
+
+            .ms-Button-flexContainer {
+                fill: none;
+
+            }
+
+            .ms-Button-textContainer {
+                fill: none;
+
+            }
+
+            .ms-Button-label {
+                fill: none;
+
+            }
+        }
+    }
+}

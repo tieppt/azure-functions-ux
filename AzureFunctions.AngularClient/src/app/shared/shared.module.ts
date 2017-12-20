@@ -57,6 +57,7 @@ import { TableCellComponent } from './../controls/table-cell/table-cell.componen
 import { TableRowComponent } from './../controls/table-row/table-row.component';
 import { TableRootComponent } from './../controls/table-root/table-root.component';
 import { DeletedItemsFilter } from './../controls/table-root/deleted-items-filter.pipe';
+import { FabricButtonDirective } from './../controls/fabric-button/fabric-button.directive';
 
 export function ArmServiceFactory(
     http: Http,
@@ -106,7 +107,8 @@ export function AiServiceFactory() {
         TableCellComponent,
         TableRowComponent,
         TableRootComponent,
-        DeletedItemsFilter
+        DeletedItemsFilter,
+        FabricButtonDirective
     ],
     exports: [
         CommonModule,
@@ -142,7 +144,8 @@ export function AiServiceFactory() {
         TableCellComponent,
         TableRowComponent,
         TableRootComponent,
-        DeletedItemsFilter
+        DeletedItemsFilter,
+        FabricButtonDirective
     ],
     imports: [
         FormsModule,

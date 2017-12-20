@@ -1,0 +1,42 @@
+.custom-button {
+    margin-left: 0px;
+    margin-bottom: 15px;
+}
+
+div[fabric-button-directive], div[fabric-button] {
+    margin-bottom: 10px;
+}
+
+.state {
+    margin-bottom: 15px;
+}
+
+// :host /deep/ .foo.ms-Button {
+//     &.ms-Button--default {
+//         background-color: purple;
+//     }
+//     &.ms-Button--primary {
+//         background-color: cyan;
+//     }
+// }
+
+// .bar /deep/ .foo.ms-Button {
+//     &.ms-Button--default {
+//         background-color: pink;
+//     }
+//     &.ms-Button--primary {
+//         background-color: fuchsia;
+//     }
+// }
+
+// .bar .foo.ms-Button {
+//     &.ms-Button--default {
+//         background-color: gray;
+//     }
+//     &.ms-Button--primary {
+//         background-color: darkgray;
+//     }
+// }
+
+//:host-context(#app-root[theme=dark]){
+//}

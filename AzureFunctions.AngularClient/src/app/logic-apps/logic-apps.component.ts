@@ -112,7 +112,6 @@ export class LogicAppsComponent extends FunctionAppContextComponent {
             .do(null, e => {
                 this._logService.error(LogCategories.generalSettings, '/logic-apps', e);
             })
-            .retry()
             .subscribe(r => {
                 const selectedJson = r.app.value.length > 0 ? r.app : r.sub;
                 this.logicApps = selectedJson.value

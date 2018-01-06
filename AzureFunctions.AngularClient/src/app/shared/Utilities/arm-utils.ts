@@ -19,6 +19,12 @@ export namespace ArmUtil {
             obj.kind.toLocaleLowerCase().indexOf('linux') !== -1;
     }
 
+    export function isLinuxDynamicApp(obj: ArmObj<Site> | FunctionContainer) {
+        return isLinuxApp(obj) &&
+            obj.properties.sku &&
+            obj.properties.sku.toLowerCase() === 'dynamic';
+    }
+
     export function mapArmSiteToContext(obj: ArmObj<Site>, isStandalone: boolean): FunctionAppContext {
         const getMainUrl = (site: ArmObj<Site>) => {
             if (isStandalone) {
@@ -32,7 +38,8 @@ export namespace ArmUtil {
             if (isStandalone) {
                 return getMainUrl(site);
             } else {
-                return `https://${site.properties.hostNameSslStates.find(s => s.hostType === 1).name}`;
+                const scmHostName = site.properties.hostNameSslStates.find(s => s.hostType === 1);
+                return scmHostName ? `https://${scmHostName.name}` : getMainUrl(site);
             }
         };
 

@@ -53,9 +53,16 @@ export class FunctionAppService {
 
     private getRuntimeToken(context: FunctionAppContext): Observable<string> {
         return this._userService.getStartupInfo()
-            .concatMap(info => ArmUtil.isLinuxApp(context.site)
-                ? this._cacheService.get(Constants.serviceHost + `api/runtimetoken${context.site.id}`, false, this.portalHeaders(info.token))
-                : this._cacheService.get(context.urlTemplates.scmTokenUrl, false, this.headers(info.token)))
+            .concatMap(info => {
+                if (ArmUtil.isLinuxDynamicApp(context.site)) {
+                    // TODO: [ahmels] use ARM pass through.
+                    return Observable.of({ json: () => '' });
+                } else if (ArmUtil.isLinuxApp(context.site)) {
+                    return this._cacheService.get(Constants.serviceHost + `api/runtimetoken${context.site.id}`, false, this.portalHeaders(info.token));
+                } else {
+                    return this._cacheService.get(context.urlTemplates.scmTokenUrl, false, this.headers(info.token));
+                }
+            })
             .map(r => r.json());
     }
 
@@ -177,6 +184,9 @@ export class FunctionAppService {
         return this.azure.executeWithConditions([], context, t =>
             this.getExtensionVersionFromAppSettings(context)
                 .mergeMap(extensionVersion => {
+                    if (ArmUtil.isLinuxApp(context.site)) {
+                        extensionVersion = 'beta';
+                    }
                     return this._cacheService.get(
                         Constants.serviceHost + 'api/templates?runtime=' + (extensionVersion || 'latest'),
                         true,
@@ -925,9 +935,9 @@ export class FunctionAppService {
 
     private headers(authTokenOrHeader: string | [string, string], ...additionalHeaders: [string, string][]): Headers {
         const headers = new Headers();
-        if (typeof authTokenOrHeader === 'string') {
+        if (typeof authTokenOrHeader === 'string' && authTokenOrHeader.length > 0) {
             headers.set('Authorization', `Bearer ${authTokenOrHeader}`);
-        } else {
+        } else if (typeof authTokenOrHeader !== 'string') {
             headers.set(authTokenOrHeader[0], authTokenOrHeader[1]);
         }
 

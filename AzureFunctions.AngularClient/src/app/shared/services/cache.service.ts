@@ -129,6 +129,16 @@ export class CacheService {
         content?: any,
         invokeApi?: boolean) {
 
+        if (url.startsWith('http://')) {
+            url = url.replace('http://', 'https://');
+            const parts = url.split('/');
+            let domain = parts[2];
+            if (domain.indexOf('.') === -1) {
+                domain = domain + '.azurewebsites.net';
+            }
+            url = url.replace(parts[2], domain);
+        }
+
         const key = url.toLowerCase();
 
         // Grab a reference before any async calls in case the item gets cleaned up

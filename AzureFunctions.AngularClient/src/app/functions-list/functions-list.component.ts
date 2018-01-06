@@ -114,7 +114,7 @@ export class FunctionsListComponent extends NavigableComponent implements OnDest
                     this._functionsNode.removeChild(resourceId, false);
 
                     const defaultHostName = this.context.site.properties.defaultHostName;
-                    const scmHostName = this.context.site.properties.hostNameSslStates.find(s => s.hostType === 1).name;
+                    const scmHostName = this.context.scmUrl;
 
                     item.sideNav.cacheService.clearCachePrefix(`https://${defaultHostName}`);
                     item.sideNav.cacheService.clearCachePrefix(`https://${scmHostName}`);

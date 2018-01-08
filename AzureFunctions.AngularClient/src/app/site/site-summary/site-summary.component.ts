@@ -38,12 +38,12 @@ import { Site } from '../../shared/models/arm/site';
 import { FunctionAppContext } from 'app/shared/function-app-context';
 import { FunctionAppService } from 'app/shared/services/function-app.service';
 
-interface DataModel {
-    hasWritePermission: boolean;
-    hasSwapPermission: boolean;
-    hasReadOnlyLock: boolean;
-    slotsList: ArmObj<Site>[];
-}
+// interface DataModel {
+//     hasWritePermission: boolean;
+//     hasSwapPermission: boolean;
+//     hasReadOnlyLock: boolean;
+//     slotsList: ArmObj<Site>[];
+// }
 
 @Component({
     selector: 'site-summary',
@@ -71,6 +71,11 @@ export class SiteSummaryComponent implements OnDestroy {
     public hideAvailability: boolean;
     public Resources = PortalResources;
     public showDownloadFunctionAppModal = false;
+
+    public containerMode: string;
+    public sidePanelOpened = false;
+
+    public newFunctionAppName: string;
 
     private _viewInfoStream: Subject<TreeViewInfo<SiteData>>;
     private _viewInfo: TreeViewInfo<SiteData>;
@@ -120,6 +125,7 @@ export class SiteSummaryComponent implements OnDestroy {
             })
             .switchMap(context => {
                 this.context = context;
+                this.newFunctionAppName = "Prod-" + context.site.name;
                 const descriptor = new SiteDescriptor(context.site.id);
                 this.subscriptionId = descriptor.subscription;
 
@@ -164,24 +170,38 @@ export class SiteSummaryComponent implements OnDestroy {
                     timerAction: 'stop'
                 });
 
-                return Observable.zip<DataModel>(
+                return Observable.zip(
                     authZService.hasPermission(context.site.id, [AuthzService.writeScope]),
                     authZService.hasPermission(context.site.id, [AuthzService.actionScope]),
                     authZService.hasReadOnlyLock(context.site.id),
                     this._functionAppService.getSlotsList(context),
-                    (p, s, l, slots) => ({
+                    this._functionAppService.getAppContainerName(context),
+                    (p, s, l, slots, docker) => ({
                         hasWritePermission: p,
                         hasSwapPermission: s,
                         hasReadOnlyLock: l,
-                        slotsList: slots
+                        slotsList: slots,
+                        dockerName: docker
                     }));
             })
             .mergeMap(r => {
                 this.hasWriteAccess = r.hasWritePermission && !r.hasReadOnlyLock;
                 if (!this._isSlot) {
-                    this.hasSwapAccess = this.hasWriteAccess && r.hasSwapPermission && r.slotsList.length > 0;
+                    this.hasSwapAccess = this.hasWriteAccess && r.hasSwapPermission && r.slotsList.isSuccessful && r.slotsList.result.length > 0;
                 } else {
                     this.hasSwapAccess = this.hasWriteAccess && r.hasSwapPermission;
+                }
+
+                if (r.dockerName.isSuccessful) {
+                    if (r.dockerName.result.startsWith('DOCKER|ahmelsayed/azure-functions-runtime:ocean-files-')) {
+                        this.containerMode = 'Prod';
+                    } else if (r.dockerName.result.startsWith('DOCKER|ahmelsayed/azure-functions-runtime:ocean-')) {
+                        this.containerMode = 'Dev';
+                    } else {
+                        this.containerMode = 'Prod';
+                    }
+                } else {
+                    console.error(r.dockerName.error);
                 }
 
                 let getAvailabilityObservible = Observable.of(null);
@@ -563,5 +583,48 @@ export class SiteSummaryComponent implements OnDestroy {
                     break;
             }
         }
+    }
+
+    publishApp() {
+        this.sidePanelOpened = true;
+    }
+
+    onCreateAndPublish(name: string) {
+        const id = this.context.site.id.substring(0, this.context.site.id.lastIndexOf('/') + 1) + name;
+        this._globalStateService.setBusyState();
+
+        this._functionAppService.publishZipAndGetSas(this.context)
+            .concatMap(url => {
+                console.log(url);
+                const body = {
+                    name: name,
+                    type: "Microsoft.Web/sites",
+                    kind: "functionapp,linux",
+                    location: "Central US (Stage)",
+                    properties: {
+                        reserved: true,
+                        siteConfig: {
+                            //linuxFxVersion: "DOCKER|ahmelsayed/azure-functions-runtime:ocean-files-1",
+                            appSettings: [
+                                {
+                                    name: "FUNCTIONS_EXTENSION_VERSION",
+                                    value: "~2"
+                                },
+                                {
+                                    name: "WEBSITE_USE_ZIP",
+                                    value: url.result
+                                }
+                            ]
+                        }
+                    }
+                };
+                return this._cacheService.putArm(id, "2014-06-01", body);
+            })
+            .subscribe(() => {
+                this._globalStateService.clearBusyState();
+                this.sidePanelOpened = false;
+            }, e => {
+                this._globalStateService.clearBusyState();
+            });
     }
 }

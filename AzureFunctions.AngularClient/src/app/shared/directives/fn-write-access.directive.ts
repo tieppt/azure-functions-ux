@@ -18,11 +18,12 @@ export class FnWriteAccessDirective {
         this.functionAppContextStream.next(value);
     }
 
-    constructor(private elementRef: ElementRef, functionAppService: FunctionAppService) {
+    constructor(private elementRef: ElementRef, private functionAppService: FunctionAppService) {
         this.functionAppContextStream = new Subject<FunctionAppContext>();
 
         this.functionAppContextStream
-            .switchMap(functionAppService.getFunctionAppEditMode)
+            .filter(c => !!c)
+            .switchMap(c => this.functionAppService.getFunctionAppEditMode(c))
             .map(result => result.isSuccessful ? EditModeHelper.isReadOnly(result.result) : false)
             .subscribe(isReadOnly => {
                 if (isReadOnly) {

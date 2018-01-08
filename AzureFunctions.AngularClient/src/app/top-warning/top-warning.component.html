@@ -3,7 +3,7 @@
      cs-enabledByDefault="true"
      *ngFor="let notification of notifications;" style="margin-left: 250px">
 
-  <div class="alert alert-warning alert-dismissible" role="alert" style="margin-bottom: 0px;min-width:1000px;">
+  <div class="dev-mode" role="alert" style="margin-bottom: 0px;min-width:1000px;">
     <span class="link" (click)="notificationClick(notification)">
       <i [class]="notification.iconClass"></i>
       {{notification.message}}&nbsp;&nbsp;&nbsp;&nbsp;

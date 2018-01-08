@@ -17,6 +17,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { HostEditorComponent } from './../host-editor/host-editor.component';
 import { SiteConfigModule } from 'app/site/site-config/site-config.module';
+import { SidebarModule } from 'ng-sidebar';
 
 const routing: ModuleWithProviders = RouterModule.forChild([
     { path: '', component: SiteDashboardComponent }
@@ -36,6 +37,7 @@ const routing: ModuleWithProviders = RouterModule.forChild([
         SharedModule,
         SharedFunctionsModule,
         SiteConfigModule,
+        SidebarModule,
         routing
     ],
     declarations: [

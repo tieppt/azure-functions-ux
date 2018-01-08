@@ -33,8 +33,7 @@ export class DownloadFunctionAppContentComponent {
   }
 
   downloadFunctionAppContent() {
-    const includeCsProj = this.currentDownloadOption === 'siteContent' ? false : true;
-    const url = `${this.scmUrl}/api/functions/admin/download?includeCsproj=${includeCsProj}&includeAppSettings=${this.includeAppSettings}`;
+    const url = `${this.scmUrl}/admin/host/download`;
     window.open(url, '_blank');
   }
 

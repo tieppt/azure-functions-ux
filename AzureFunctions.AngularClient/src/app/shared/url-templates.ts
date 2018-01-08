@@ -124,4 +124,8 @@ export class UrlTemplates {
     get getSwaggerDocumentUrl() {
         return `${this.mainSiteUrl}/admin/host/swagger`;
     }
+
+    get publishUrl() {
+        return `${this.mainSiteUrl}/admin/host/publish`
+    }
 }

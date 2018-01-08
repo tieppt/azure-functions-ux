@@ -1,19 +1,19 @@
 import { FunctionInfo } from './../shared/models/function-info';
 import { FunctionAppService } from './../shared/services/function-app.service';
 import { FunctionAppContext } from './../shared/function-app-context';
-import { TreeUpdateEvent } from './../shared/models/broadcast-event';
+// import { TreeUpdateEvent } from './../shared/models/broadcast-event';
 import { GlobalStateService } from './../shared/services/global-state.service';
 import { ConfigService } from './../shared/services/config.service';
 import { AiService } from './../shared/services/ai.service';
-import { PortalResources } from './../shared/models/portal-resources';
+// import { PortalResources } from './../shared/models/portal-resources';
 import { TopBarNotification } from './../top-bar/top-bar-models';
 import { Site } from './../shared/models/arm/site';
 import { ArmObj } from './../shared/models/arm/arm-obj';
 import { CacheService } from 'app/shared/services/cache.service';
 import { Observable } from 'rxjs/Observable';
-import { NotificationIds, Constants, SiteTabIds } from './../shared/models/constants';
+import { NotificationIds/*, Constants, SiteTabIds*/ } from './../shared/models/constants';
 import { DashboardType } from 'app/tree-view/models/dashboard-type';
-import { BroadcastEvent } from 'app/shared/models/broadcast-event';
+// import { BroadcastEvent } from 'app/shared/models/broadcast-event';
 import { Component, ViewChild, OnDestroy } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { PortalService } from '../shared/services/portal.service';
@@ -22,8 +22,10 @@ import { FunctionDevComponent } from '../function-dev/function-dev.component';
 import { BroadcastService } from '../shared/services/broadcast.service';
 import { Subscription as RxSubscription } from 'rxjs/Subscription';
 import { Response } from '@angular/http';
-import { FunctionsVersionInfoHelper } from '../shared/models/functions-version-info';
+// import { FunctionsVersionInfoHelper } from '../shared/models/functions-version-info';
 import { NavigableComponent } from '../shared/components/navigable-component';
+import { ArmUtil } from 'app/shared/Utilities/arm-utils';
+import { SiteConfig } from 'app/shared/models/arm/site-config';
 
 @Component({
     selector: 'function-edit',
@@ -53,9 +55,9 @@ export class FunctionEditComponent extends NavigableComponent implements OnDestr
         private _portalService: PortalService,
         private _functionAppService: FunctionAppService,
         private _cacheService: CacheService,
-        private _translateService: TranslateService,
-        private _aiService: AiService,
-        private _configService: ConfigService,
+        _translateService: TranslateService,
+        _aiService: AiService,
+        _configService: ConfigService,
         private _globalStateService: GlobalStateService) {
         super('function-edit', broadcastService, info => {
             if (this.viewInfo) {
@@ -168,78 +170,94 @@ export class FunctionEditComponent extends NavigableComponent implements OnDestr
             const notifications: TopBarNotification[] = [];
 
             if (result.configResponse) {
-                const config = result.configResponse.json();
-                const alwaysOnSetting = config.properties.alwaysOn === true || this.context.site.properties.sku === 'Dynamic';
+                const config: ArmObj<SiteConfig> = result.configResponse.json();
+                // const alwaysOnSetting = config.properties.alwaysOn === true || this.context.site.properties.sku === 'Dynamic';
 
-                if (!alwaysOnSetting) {
-                    notifications.push({
-                        id: NotificationIds.alwaysOn,
-                        message: this._translateService.instant(PortalResources.topBar_alwaysOn),
-                        iconClass: 'fa fa-exclamation-triangle warning',
-                        learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=830855',
-                        clickCallback: null
-                    });
-                }
-            }
+                // if (!alwaysOnSetting) {
+                //     notifications.push({
+                //         id: NotificationIds.alwaysOn,
+                //         message: this._translateService.instant(PortalResources.topBar_alwaysOn),
+                //         iconClass: 'fa fa-exclamation-triangle warning',
+                //         learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=830855',
+                //         clickCallback: null
+                //     });
+                // }
 
-            if (result.appSettingResponse) {
-                const appSettings: ArmObj<any> = result.appSettingResponse.json();
-                const extensionVersion = appSettings.properties[Constants.runtimeVersionAppSettingName];
-                let isLatestFunctionRuntime = null;
-                if (extensionVersion) {
-                    if (extensionVersion === 'beta') {
-                        isLatestFunctionRuntime = true;
+                if (ArmUtil.isLinuxDynamicApp(this.context.site) && config.properties.linuxFxVersion) {
+                    if (config.properties.linuxFxVersion.startsWith('DOCKER|ahmelsayed/azure-functions-runtime:ocean-files-')) {
+
+                    } else if (config.properties.linuxFxVersion.startsWith('DOCKER|ahmelsayed/azure-functions-runtime:ocean-')) {
                         notifications.push({
-                            id: NotificationIds.runtimeV2,
-                            message: this._translateService.instant(PortalResources.topBar_runtimeV2),
+                            id: NotificationIds.devContainer,
+                            message: 'You are running in dev mode. Your functions are limited to 1 instance while in dev mode.',
                             iconClass: 'fa fa-exclamation-triangle warning',
-                            learnMoreLink: '',
-                            clickCallback: () => {
-                                this._broadcastService.broadcastEvent<TreeUpdateEvent>(BroadcastEvent.TreeUpdate, {
-                                    operation: 'navigate',
-                                    resourceId: this.context.site.id,
-                                    data: SiteTabIds.functionRuntime
-                                });
-                            }
-                        });
-                    } else {
-                        isLatestFunctionRuntime = !FunctionsVersionInfoHelper.needToUpdateRuntime(this._configService.FunctionsVersionInfo, extensionVersion);
-                        this._aiService.trackEvent('/values/runtime_version', { runtime: extensionVersion, appName: this.context.site.id });
-                    }
-                }
-
-                if (!isLatestFunctionRuntime) {
-                    notifications.push({
-                        id: NotificationIds.newRuntimeVersion,
-                        message: this._translateService.instant(PortalResources.topBar_newVersion),
-                        iconClass: 'fa fa-info link',
-                        learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=829530',
-                        clickCallback: () => {
-                            this._broadcastService.broadcastEvent<TreeUpdateEvent>(BroadcastEvent.TreeUpdate, {
-                                operation: 'navigate',
-                                resourceId: this.context.site.id,
-                                data: SiteTabIds.functionRuntime
-                            });
-                        }
-                    });
-                }
-                if (result.slotsResponse) {
-                    let slotsStorageSetting = appSettings.properties[Constants.slotsSecretStorageSettingsName];
-                    if (!!slotsStorageSetting) {
-                        slotsStorageSetting = slotsStorageSetting.toLowerCase();
-                    }
-                    const numSlots = result.slotsResponse.length;
-                    if (numSlots > 0 && slotsStorageSetting !== Constants.slotsSecretStorageSettingsValue.toLowerCase()) {
-                        notifications.push({
-                            id: NotificationIds.slotsHostId,
-                            message: this._translateService.instant(PortalResources.topBar_slotsHostId),
-                            iconClass: 'fa fa-exclamation-triangle warning',
-                            learnMoreLink: '',
+                            learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=830855',
                             clickCallback: null
                         });
+                    } else {
+
                     }
                 }
             }
+
+            // if (result.appSettingResponse) {
+            //     const appSettings: ArmObj<any> = result.appSettingResponse.json();
+            //     const extensionVersion = appSettings.properties[Constants.runtimeVersionAppSettingName];
+            //     let isLatestFunctionRuntime = null;
+            //     if (extensionVersion) {
+            //         if (extensionVersion === 'beta') {
+            //             isLatestFunctionRuntime = true;
+            //             notifications.push({
+            //                 id: NotificationIds.runtimeV2,
+            //                 message: this._translateService.instant(PortalResources.topBar_runtimeV2),
+            //                 iconClass: 'fa fa-exclamation-triangle warning',
+            //                 learnMoreLink: '',
+            //                 clickCallback: () => {
+            //                     this._broadcastService.broadcastEvent<TreeUpdateEvent>(BroadcastEvent.TreeUpdate, {
+            //                         operation: 'navigate',
+            //                         resourceId: this.context.site.id,
+            //                         data: SiteTabIds.functionRuntime
+            //                     });
+            //                 }
+            //             });
+            //         } else {
+            //             isLatestFunctionRuntime = !FunctionsVersionInfoHelper.needToUpdateRuntime(this._configService.FunctionsVersionInfo, extensionVersion);
+            //             this._aiService.trackEvent('/values/runtime_version', { runtime: extensionVersion, appName: this.context.site.id });
+            //         }
+            //     }
+
+            //     if (!isLatestFunctionRuntime) {
+            //         notifications.push({
+            //             id: NotificationIds.newRuntimeVersion,
+            //             message: this._translateService.instant(PortalResources.topBar_newVersion),
+            //             iconClass: 'fa fa-info link',
+            //             learnMoreLink: 'https://go.microsoft.com/fwlink/?linkid=829530',
+            //             clickCallback: () => {
+            //                 this._broadcastService.broadcastEvent<TreeUpdateEvent>(BroadcastEvent.TreeUpdate, {
+            //                     operation: 'navigate',
+            //                     resourceId: this.context.site.id,
+            //                     data: SiteTabIds.functionRuntime
+            //                 });
+            //             }
+            //         });
+            //     }
+            //     if (result.slotsResponse) {
+            //         let slotsStorageSetting = appSettings.properties[Constants.slotsSecretStorageSettingsName];
+            //         if (!!slotsStorageSetting) {
+            //             slotsStorageSetting = slotsStorageSetting.toLowerCase();
+            //         }
+            //         const numSlots = result.slotsResponse.length;
+            //         if (numSlots > 0 && slotsStorageSetting !== Constants.slotsSecretStorageSettingsValue.toLowerCase()) {
+            //             notifications.push({
+            //                 id: NotificationIds.slotsHostId,
+            //                 message: this._translateService.instant(PortalResources.topBar_slotsHostId),
+            //                 iconClass: 'fa fa-exclamation-triangle warning',
+            //                 learnMoreLink: '',
+            //                 clickCallback: null
+            //             });
+            //         }
+            //     }
+            // }
 
             this._globalStateService.setTopBarNotifications(notifications);
         }

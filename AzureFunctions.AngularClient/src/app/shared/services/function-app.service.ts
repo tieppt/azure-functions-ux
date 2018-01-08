@@ -564,6 +564,14 @@ export class FunctionAppService {
             }));
     }
 
+    getAppContainerName(context: FunctionAppContext): Result<string> {
+        return this.azure.executeWithConditions([], context, this._cacheService.getArm(`${context.site.id}/config/web`)
+            .map(r => {
+                const config: ArmObj<SiteConfig> = r.json();
+                return config.properties.linuxFxVersion;
+            }));
+    }
+
 
     isSlot(context: FunctionAppContext | string): boolean {
         // slots id looks like
@@ -641,13 +649,13 @@ export class FunctionAppService {
         // | Yes  | false         | undefined       | ReadOnlySlots                 |
         // |______|_______________|_________________|_______________________________|
 
-        if (1 < 2) {
-            return Observable.of({
-                isSuccessful: true,
-                result: FunctionAppEditMode.ReadWrite,
-                error: null
-            });
-        }
+        // if (1 < 2) {
+        //     return Observable.of({
+        //         isSuccessful: true,
+        //         result: FunctionAppEditMode.ReadWrite,
+        //         error: null
+        //     });
+        // }
         return this.azure.executeWithConditions([], context,
             Observable.zip(
                 this.isSourceControlEnabled(context),
@@ -666,10 +674,14 @@ export class FunctionAppService {
                         result.sourceControlEnabled.result;
 
                     let editModeSettingString: string = appSettings ? appSettings.properties[Constants.functionAppEditModeSettingName] || '' : '';
+                    let zipSetting: string = appSettings ? appSettings.properties['WEBSITE_USE_ZIP'] || '' : '';
                     editModeSettingString = editModeSettingString.toLocaleLowerCase();
                     const vsCreatedFunc = result.functions.isSuccessful
                         ? !!result.functions.result.find((fc: any) => !!fc.config.generatedBy)
                         : false;
+                    if (zipSetting) {
+                        return FunctionAppEditMode.ReadOnly;
+                    }
 
                     if (vsCreatedFunc && (editModeSettingString === Constants.ReadOnlyMode || editModeSettingString === '')) {
                         return FunctionAppEditMode.ReadOnlyVSGenerated;
@@ -680,7 +692,7 @@ export class FunctionAppService {
                     } else if (sourceControlled) {
                         return FunctionAppEditMode.ReadOnlySourceControlled;
                     } else {
-                        return result.hasSlots ? FunctionAppEditMode.ReadOnlySlots : FunctionAppEditMode.ReadWrite;
+                        return FunctionAppEditMode.ReadWrite;
                     }
                 })
                 .catch(() => Observable.of(FunctionAppEditMode.ReadWrite)));
@@ -898,6 +910,11 @@ export class FunctionAppService {
             });
     }
 
+    publishZipAndGetSas(context: FunctionAppContext): Result<string> {
+        return this.runtime.execute(context, t =>
+            this._cacheService.post(context.urlTemplates.publishUrl, true, this.jsonHeaders(t), '{}')
+                              .map((r: Response) => r.text()));
+    }
 
     private localize(objectToLocalize: any): any {
         if ((typeof objectToLocalize === 'string') && (objectToLocalize.startsWith('$'))) {

@@ -679,7 +679,7 @@ export class FunctionAppService {
                     const vsCreatedFunc = result.functions.isSuccessful
                         ? !!result.functions.result.find((fc: any) => !!fc.config.generatedBy)
                         : false;
-                    if (zipSetting) {
+                    if (zipSetting || context.site.name.toLocaleLowerCase().indexOf('byoc') !== -1) {
                         return FunctionAppEditMode.ReadOnly;
                     }
 
@@ -913,7 +913,7 @@ export class FunctionAppService {
     publishZipAndGetSas(context: FunctionAppContext): Result<string> {
         return this.runtime.execute(context, t =>
             this._cacheService.post(context.urlTemplates.publishUrl, true, this.jsonHeaders(t), '{}')
-                              .map((r: Response) => r.text()));
+                .map((r: Response) => r.text()));
     }
 
     private localize(objectToLocalize: any): any {

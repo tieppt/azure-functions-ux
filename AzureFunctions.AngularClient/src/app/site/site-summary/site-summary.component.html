@@ -187,18 +187,18 @@
         <div>
 
           <div class="headerBox" style="width: 100%; height: 40px; text-align: left; color: #252525; font-size: 14px; line-height: 37px; margin-bottom: 20px;background-color: rgb(229, 237, 216);">
+            <div style="background-color: rgb(113, 149, 22); display: inline-block; height: 40px; width: 40px; margin-right: 15px; float: left; padding: 5px;"></div>
             Publish Function App
-            <img src="/ng-full/image/scale-up.svg" style="background-color: rgb(113, 149, 22); display: inline-block; height: 40px; width: 40px; margin-right: 15px; float: left; padding: 5px;">
           </div>
           <div style="padding: 20px 10px 20px 10px">
             <div style="font-size: 16px; padding:20px 0 20px 0">Select an existing function app:</div>
 
             <drop-down [options]="publishTargets"
-                      (value)="onPublishTargetChanged($event)"
-                      [setDefault]="false"> 
+                      (value)="selectedPublishTarget = $event"
+                      [setDefault]="false">
             </drop-down>
             <div style="padding-top: 20px">
-              <button class="custom-button" (click)="onCreate()">{{ 'create' | translate }} </button>
+              <button class="custom-button" (click)="onPublish(selectedPublishTarget)">{{ 'Publish' | translate }} </button>
             </div>
 
             <div style="padding: 50px 0 20px 0; font-size: 16px;">Or publish to a new function app:</div>

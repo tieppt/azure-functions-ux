@@ -22,7 +22,7 @@ import { PortalService } from './../../shared/services/portal.service';
 import { Subscription } from './../../shared/models/subscription';
 import { Availability } from './../site-notifications/notifications';
 import { AiService } from './../../shared/services/ai.service';
-import { ArmObj } from './../../shared/models/arm/arm-obj';
+import { ArmObj, ArmArrayResult } from './../../shared/models/arm/arm-obj';
 import { AppNode } from './../../tree-view/app-node';
 import { TreeViewInfo, SiteData } from './../../tree-view/models/tree-view-info';
 import { ArmService } from './../../shared/services/arm.service';
@@ -37,6 +37,8 @@ import { SiteDescriptor } from '../../shared/resourceDescriptors';
 import { Site } from '../../shared/models/arm/site';
 import { FunctionAppContext } from 'app/shared/function-app-context';
 import { FunctionAppService } from 'app/shared/services/function-app.service';
+import { ArmUtil } from '../../shared/Utilities/arm-utils';
+import { DropDownElement } from '../../shared/models/drop-down-element';
 
 // interface DataModel {
 //     hasWritePermission: boolean;
@@ -585,8 +587,44 @@ export class SiteSummaryComponent implements OnDestroy {
         }
     }
 
+    public publishTargets: DropDownElement<string>[] = [];
     publishApp() {
-        this.sidePanelOpened = true;
+        this._globalStateService.setBusyState();
+        const id = this.context.site.id.substring(0, this.context.site.id.lastIndexOf('/') + 1);
+        this._cacheService.getArm(id, true)
+            .subscribe(r => {
+                this._globalStateService.clearBusyState();
+                const response: ArmArrayResult<Site> = r.json();
+                const linuxApps = response.value.filter(s => ArmUtil.isLinuxDynamicApp(s));
+                this.publishTargets = linuxApps.filter(a => a.name !== this.context.site.name).map(a => {
+                    return {
+                        displayLabel: a.name,
+                        value: a.id
+                    };
+                });
+                this.sidePanelOpened = true;
+            }, e => {
+                this._globalStateService.clearBusyState();
+            });
+    }
+
+    onPublish(id: string) {
+        console.log(id);
+        this._globalStateService.setBusyState();
+
+        Observable.zip(this._functionAppService.publishZipAndGetSas(this.context), this._cacheService.postArm(id + '/config/appsettings/list', true))
+            .concatMap(tuple => {
+                const sasUrl = tuple[0];
+                const appSettings: ArmObj<{ [key: string]: string }> = tuple[1].json();
+                appSettings.properties['WEBSITE_USE_ZIP'] = sasUrl.result;
+                return this._cacheService.putArm(id + '/config/appsettings', null, appSettings);
+            })
+            .subscribe(s => {
+                this._globalStateService.clearBusyState();
+                this.sidePanelOpened = false;
+            }, e => {
+                this._globalStateService.clearBusyState();
+            });
     }
 
     onCreateAndPublish(name: string) {
@@ -598,27 +636,30 @@ export class SiteSummaryComponent implements OnDestroy {
                 console.log(url);
                 const body = {
                     name: name,
-                    type: "Microsoft.Web/sites",
-                    kind: "functionapp,linux",
-                    location: "Central US (Stage)",
+                    type: 'Microsoft.Web/sites',
+                    kind: 'functionapp,linux',
+                    location: 'Central US (Stage)',
                     properties: {
                         reserved: true,
                         siteConfig: {
-                            //linuxFxVersion: "DOCKER|ahmelsayed/azure-functions-runtime:ocean-files-1",
                             appSettings: [
                                 {
-                                    name: "FUNCTIONS_EXTENSION_VERSION",
-                                    value: "~2"
+                                    name: 'FUNCTIONS_EXTENSION_VERSION',
+                                    value: '~2'
                                 },
                                 {
-                                    name: "WEBSITE_USE_ZIP",
+                                    name: 'WEBSITE_USE_ZIP',
                                     value: url.result
+                                },
+                                {
+                                    name: 'AzureWebJobsStorage',
+                                    value: 'DefaultEndpointsProtocol=https;AccountName=functionf8bc1916bffe;AccountKey=EnKgzGMAzG1qEMP6cmUcI8Sg0i1AALbObHw9xx79Hb8KcQ4r5r1bZ1pUxib4i0iYBIZLan+Py1/etBKaBJz5sQ==;EndpointSuffix=core.windows.net'
                                 }
                             ]
                         }
                     }
                 };
-                return this._cacheService.putArm(id, "2014-06-01", body);
+                return this._cacheService.putArm(id, '2014-06-01', body);
             })
             .subscribe(() => {
                 this._globalStateService.clearBusyState();

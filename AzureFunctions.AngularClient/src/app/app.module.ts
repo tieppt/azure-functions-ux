@@ -11,6 +11,8 @@ import { PopoverModule } from 'ng2-popover';
 import { AppComponent } from './app.component';
 import { ErrorListComponent } from './error-list/error-list.component';
 import { DisabledDashboardComponent } from './disabled-dashboard/disabled-dashboard.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
@@ -94,7 +96,8 @@ export class AppModule {
             HttpModule,
             TranslateModule.forRoot(),
             PopoverModule,
-            routes
+            routes,
+            ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production })
         ],
         providers: [InitResolver],
         bootstrap: [AppComponent]

@@ -120,9 +120,6 @@ export class EmbeddedFunctionLogsTabComponent extends BottomTabComponent impleme
       .switchMap(t => {
         return this._cacheService.getArm(`${this.resourceId}/logs`, true);
       })
-      .catch(e => {
-        return Observable.of(null);
-      })
       .switchMap(r => {
         if (r) {
           const files: VfsObject[] = r.json();
@@ -140,14 +137,16 @@ export class EmbeddedFunctionLogsTabComponent extends BottomTabComponent impleme
         }
         return Observable.of(null);
       })
+      .do(null, err => {
+        this.logContent = this._translateService.instant(PortalResources.logStreaming_failedToDownload).format(err.text());
+      })
+      .retry()
       .subscribe(r => {
         if (r) {
           this.logContent = r.text();
         } else {
           this.logContent = this._translateService.instant(PortalResources.logStreaming_noLogs);
         }
-      }, err => {
-        this.logContent = this._translateService.instant(PortalResources.logStreaming_failedToDownload).format(err.text());
       });
   }
 

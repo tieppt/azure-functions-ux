@@ -1,28 +1,40 @@
 {
-  "index": "/index.html",
+  "index": "/",
   "assetGroups": [{
     "name": "app",
-    "installMode": "prefetch",
-    "resources": {
-      "files": [
-        "/favicon.ico",
-        "/index.html"
-      ],
-      "versionedFiles": [
-        "/*.bundle.css",
-        "/*.bundle.js",
-        "/*.chunk.js"
-      ]
-    }
-  }, {
-    "name": "assets",
     "installMode": "lazy",
-    "updateMode": "prefetch",
     "resources": {
-      "files": [
-        "/assets/**",
-        "/image/**"
+      "urls": [
+      
       ]
     }
-  }]
+  }],
+  "dataGroups": [{
+      "name": "api-freshness",
+      "urls": [
+        "https://management.azure.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "3d",
+        "timeout": "10s"
+      }
+    },
+    {
+      "name": "cache",
+      "urls": [
+        "https://localhost:44300/**",
+        "https://functions-release.azureedge.net/**",
+        "https://functions-stage.azureedge.net/**",
+        "https://functions-next.azureedge.net/**",
+        "https://functions.azureedge.net/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 1000,
+        "maxAge": "3d",
+        "timeout": "10s"
+      }
+    }]
 }

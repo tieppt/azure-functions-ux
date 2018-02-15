@@ -67,6 +67,13 @@ const redirectToAcom = (req: express.Request, res: express.Response, next: NextF
     }
 };
 
+app.get('/ngsw-worker.js', (_, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'ng-full', 'ngsw-worker.js'));
+});
+
+app.get('/ngsw.json', (_, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'ng-full', 'ngsw.json'));
+});
 const renderIndex = (req: express.Request, res: express.Response) => {
     staticConfig.config.clientOptimzationsOff = req.query['appsvc.clientoptimizations'] && req.query['appsvc.clientoptimizations'] === 'false';
     res.render('index', staticConfig);

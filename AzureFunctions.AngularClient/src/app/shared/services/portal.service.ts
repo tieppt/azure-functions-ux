@@ -42,7 +42,7 @@ export class PortalService {
     private operationStream = new Subject<DataMessage<any>>();
 
     public static inIFrame(): boolean {
-        return window.parent !== window && window.location.pathname !== '/context.html';
+        return false; // window.parent !== window && window.location.pathname !== '/context.html';
     }
 
     public static inTab(): boolean {

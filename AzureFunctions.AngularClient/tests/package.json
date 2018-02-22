@@ -1,0 +1,10 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@bahmutov/add-typescript-to-cypress": "^2.0.0",
+    "cypress": "^2.0.1",
+    "typescript": "^2.7.2"
+  }
+}

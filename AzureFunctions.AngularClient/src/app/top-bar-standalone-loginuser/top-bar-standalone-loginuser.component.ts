@@ -23,8 +23,12 @@ export class TopBarStandAloneLoginUserComponent {
     }
 
     dispalyName(): string {
-        const parts = this.user.given_name.split('\\');
-        return parts[parts.length - 1];
+        if (this.user.given_name) {
+            const parts = this.user.given_name.split('\\');
+            return parts[parts.length - 1];
+        } else {
+            return this.user.name;
+        }
     }
 
     userId(): string {

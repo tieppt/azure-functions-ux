@@ -30,6 +30,7 @@ export class ConnectionStringsComponent extends ConfigSaveComponent implements O
     public Resources = PortalResources;
     public groupArray: FormArray;
     public hasWritePermissions: boolean;
+    public hasStickyWritePermissions: boolean;
     public permissionsMessage: string;
     public showPermissionsMessage: boolean;
     public connectionStringTypes: DropDownElement<ConnectionStringType>[];
@@ -121,6 +122,7 @@ export class ConnectionStringsComponent extends ConfigSaveComponent implements O
 
     private _resetPermissionsAndLoadingState() {
         this.hasWritePermissions = true;
+        this.hasStickyWritePermissions = true;
         this.permissionsMessage = '';
         this.showPermissionsMessage = false;
         this.loadingFailureMessage = '';

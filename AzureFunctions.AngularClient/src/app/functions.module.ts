@@ -9,6 +9,8 @@ import { TableFunctionMonitorComponent } from './table-function-monitor/table-fu
 import { AggregateBlockPipe } from './aggregate-block/aggregate-block.pipe';
 import { AggregateBlockComponent } from './aggregate-block/aggregate-block.component';
 import { FunctionMonitorComponent } from './function-monitor/function-monitor.component';
+import { MonitorClassicComponent } from './function-monitor/monitor-classic/monitor-classic.component';
+import { MonitorApplicationInsightsComponent } from './function-monitor/monitor-applicationinsights/monitor-applicationinsights.component';
 import { BindingEventGridComponent } from './binding-event-grid/binding-event-grid.component';
 import { AppSettingComponent } from './pickers/app-setting/app-setting.component';
 import { StorageComponent } from './pickers/storage/storage.component';
@@ -123,6 +125,8 @@ const routing: ModuleWithProviders = RouterModule.forChild([
         SqlComponent,
         BindingEventGridComponent,
         FunctionMonitorComponent,
+        MonitorClassicComponent,
+        MonitorApplicationInsightsComponent,
         AggregateBlockComponent,
         AggregateBlockPipe,
         TableFunctionMonitorComponent,

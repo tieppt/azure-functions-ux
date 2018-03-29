@@ -351,3 +351,9 @@ export class DeploymentCenterConstants {
     public static dropboxUri = 'https://www.dropbox.com/home/Apps/Azure';
     public static onedriveApiUri = 'https://api.onedrive.com/v1.0/drive/special/approot:';
 }
+
+export class ComponentNames {
+    public static functionMonitor = 'function-monitor';
+    public static monitorClassic = 'monitor-classic';
+    public static monitorApplicationInsights = 'monitor-applicationinsights';
+}

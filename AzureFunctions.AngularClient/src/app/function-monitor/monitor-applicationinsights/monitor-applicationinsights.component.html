@@ -1,6 +1,70 @@
-<div>
-  <busy-state></busy-state>
-  <p>
-    monitor-applicationinsights works!
-  </p>
+<command-bar>
+  <command displayText="{{ 'refresh' | translate }}"
+    iconUrl="image/reset.svg"></command>
+
+  <command displayText="{{ 'refresh' | translate }}"
+    iconUrl="image/open-external.svg"></command>
+</command-bar>
+
+<div id="essentials-container">
+  <div class="essentials-col">
+    <div>
+      <label id="applicationInsightsInstanceLabel">Application Insights Instance</label>
+      <div tabindex="0"
+            id="applicationInsightsInstanceValue"
+            aria-labelledby="applicationInsightsInstanceLabel applicationInsightsInstanceValue">
+            {{applicationInsightsInstanceName}}
+      </div>
+    </div>
+  </div>
+
+  <div class="essentials-col">
+    <div>
+      <label id="successCountLabel">{{successCountHeading}}</label>
+      <div tabindex="0"
+            id="successCountValue"
+            class="success"
+            aria-labelledby="successCountLabel successCountValue">
+            {{successCount}}
+      </div>
+    </div>
+  </div>
+
+  <div class="essentials-col">
+    <div>
+      <label id="errorsCountLabel">{{errorsCountHeading}}</label>
+      <div tabindex="0"
+            id="errorsCountValue"
+            class="fail"
+            aria-labelledby="errorsCountLabel errorsCountValue">
+            {{errorsCount}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="function-monitor-content">
+    <tbl [items]="invocationTraces" #table="tbl">
+        <tr>
+          <th><tbl-th name="timestamp">{{ 'timestamp'.toUpperCase() }}</tbl-th></th>
+          <th><tbl-th name="success">{{ 'success'.toUpperCase() }}</tbl-th></th>
+          <th><tbl-th name="resultCode">{{ 'result code'.toUpperCase() }}</tbl-th></th>
+          <th><tbl-th name="duration">{{ 'duration'.toUpperCase() }}</tbl-th></th>
+          <th><tbl-th name="id">{{ 'id'.toUpperCase() }}</tbl-th></th>
+        </tr>
+    
+        <tr *ngFor="let trace of invocationTraces">
+          <td><a class="link" (click)="clickRow(item)">{{trace.timestamp}}</a></td>
+          <td>{{trace.success}}</td>
+          <td>{{trace.resultCode}}</td>
+          <td>{{trace.duration}}</td>
+          <td>{{trace.id}}</td>
+        </tr>
+    
+        <tr *ngIf="invocationTraces.length === 0">
+          <td *ngIf="isLoading" colspan="5">{{'functionMonitor_loading' | translate}}</td>
+          <td *ngIf="!isLoading" colspan="5">{{'noResults' | translate}}</td>
+        </tr>
+        
+      </tbl>
 </div>

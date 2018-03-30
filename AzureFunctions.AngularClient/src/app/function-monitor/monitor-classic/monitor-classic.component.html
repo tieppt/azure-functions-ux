@@ -1,6 +1,18 @@
-<div>
-  <busy-state></busy-state>
-  <p>
-    monitor-classic works!
-  </p>
+<command-bar>
+    <command displayText="{{ 'refresh' | translate }}"
+        (click)="refreshFuncMonitorGridData()"
+        iconUrl="image/reset.svg"></command>
+</command-bar>
+
+<div class="function-monitor-content">
+
+    <div id="function-aggregates">
+        <aggregate-block [title]="successAggregateHeading" [value]="successAggregate" style="float:left; width: 45%; margin-right:2%">Loading...</aggregate-block>
+        <aggregate-block [title]="errorsAggregateHeading" [value]="errorsAggregate" style="float:right; width: 45%">Loading...</aggregate-block>
+        <div style="clear: both"></div>
+    </div>
+
+    <table-function-monitor
+        [functionMonitorInfoInput] = "functionMonitorInfo">
+    </table-function-monitor>
 </div>

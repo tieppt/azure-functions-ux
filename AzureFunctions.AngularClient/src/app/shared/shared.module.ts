@@ -64,6 +64,7 @@ import { DeletedItemsFilter } from './../controls/table-root/deleted-items-filte
 import { ActivateWithKeysDirective } from './../controls/activate-with-keys/activate-with-keys.directive';
 import { EmbeddedService } from 'app/shared/services/embedded.service';
 import { SiteService } from 'app/shared/services/site.service';
+import { ApplicationInsightsService } from './services/application-insights.service';
 
 export function ArmServiceFactory(
     http: Http,
@@ -203,7 +204,8 @@ export class SharedModule {
                 SiteService,
                 TelemetryService,
                 { provide: AiService, useFactory: AiServiceFactory },
-                { provide: ErrorHandler, useClass: GlobalErrorHandler }
+                { provide: ErrorHandler, useClass: GlobalErrorHandler },
+                ApplicationInsightsService
             ]
         };
     }

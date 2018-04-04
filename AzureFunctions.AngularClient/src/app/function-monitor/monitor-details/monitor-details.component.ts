@@ -11,7 +11,7 @@ import { AIInvocationTraceDetail } from '../../shared/models/application-insight
 @Component({
   selector: ComponentNames.monitorDetails,
   templateUrl: './monitor-details.component.html',
-  styleUrls: ['./monitor-details.component.scss']
+  styleUrls: ['./../function-monitor.component.scss', './monitor-details.component.scss']
 })
 export class MonitorDetailsComponent extends FeatureComponent<MonitorDetailsInfo> {
 

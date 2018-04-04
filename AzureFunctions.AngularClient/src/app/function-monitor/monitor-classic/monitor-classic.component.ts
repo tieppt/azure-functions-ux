@@ -14,7 +14,7 @@ declare const moment: any;
 @Component({
     selector: ComponentNames.monitorClassic,
     templateUrl: './monitor-classic.component.html',
-    styleUrls: ['./monitor-classic.component.scss']
+    styleUrls: ['./../function-monitor.component.scss', './monitor-classic.component.scss']
 })
 export class MonitorClassicComponent extends FeatureComponent<FunctionMonitorInfo> {
     @ViewChild(TableFunctionMonitorComponent) tableFunctionMonitorComponent: TableFunctionMonitorComponent;

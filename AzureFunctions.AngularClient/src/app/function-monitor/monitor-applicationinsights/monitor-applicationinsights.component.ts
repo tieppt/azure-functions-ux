@@ -14,7 +14,7 @@ declare const moment: any;
 @Component({
   selector: ComponentNames.monitorApplicationInsights,
   templateUrl: './monitor-applicationinsights.component.html',
-  styleUrls: ['./monitor-applicationinsights.component.scss']
+  styleUrls: ['./../function-monitor.component.scss', './monitor-applicationinsights.component.scss']
 })
 
 export class MonitorApplicationInsightsComponent extends FeatureComponent<FunctionMonitorInfo> {

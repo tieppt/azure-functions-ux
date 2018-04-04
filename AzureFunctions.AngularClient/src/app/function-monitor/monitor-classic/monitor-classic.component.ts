@@ -1,4 +1,4 @@
-import { Component, Input, Injector } from '@angular/core';
+import { Component, Input, Injector, ViewChild } from '@angular/core';
 import { ComponentNames } from '../../shared/models/constants';
 import { FeatureComponent } from '../../shared/components/feature-component';
 import { FunctionMonitorInfo } from '../../shared/models/function-monitor';
@@ -7,6 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { PortalResources } from '../../shared/models/portal-resources';
 import { FunctionAppService } from '../../shared/services/function-app.service';
 import { FunctionMonitorService } from '../../shared/services/function-monitor.service';
+import { TableFunctionMonitorComponent } from '../../table-function-monitor/table-function-monitor.component';
 
 declare const moment: any;
 
@@ -16,6 +17,8 @@ declare const moment: any;
     styleUrls: ['./monitor-classic.component.scss']
 })
 export class MonitorClassicComponent extends FeatureComponent<FunctionMonitorInfo> {
+    @ViewChild(TableFunctionMonitorComponent) tableFunctionMonitorComponent: TableFunctionMonitorComponent;
+
     @Input() set functionMonitorInfoInput(functionMonitorInfo: FunctionMonitorInfo) {
         this.setBusy();
         this.successAggregate = this.errorsAggregate = this._translateService.instant(PortalResources.functionMonitor_loading);
@@ -39,12 +42,6 @@ export class MonitorClassicComponent extends FeatureComponent<FunctionMonitorInf
         this._setHeaders();
     }
 
-    private _setHeaders(): void {
-        const firstOfMonth = moment().startOf('month');
-        this.successAggregateHeading = `${this._translateService.instant(PortalResources.functionMonitor_successAggregate)} ${firstOfMonth.format('MMM Do')}`;
-        this.errorsAggregateHeading = `${this._translateService.instant(PortalResources.functionMonitor_errorsAggregate)} ${firstOfMonth.format('MMM Do')}`;
-    }
-
     protected setup(functionMonitorInfoInputEvent: Observable<FunctionMonitorInfo>) {
         return functionMonitorInfoInputEvent
             .switchMap(functionMonitorInfo => {
@@ -64,7 +61,14 @@ export class MonitorClassicComponent extends FeatureComponent<FunctionMonitorInf
             });
     }
 
-    refreshFuncMonitorGridData() {
+    public refreshMonitorClassicData() {
+        this.setInput(this.functionMonitorInfo);
+        this.tableFunctionMonitorComponent.refresh();
+    }
 
+    private _setHeaders(): void {
+        const firstOfMonth = moment().startOf('month');
+        this.successAggregateHeading = `${this._translateService.instant(PortalResources.functionMonitor_successAggregate)} ${firstOfMonth.format('MMM Do')}`;
+        this.errorsAggregateHeading = `${this._translateService.instant(PortalResources.functionMonitor_errorsAggregate)} ${firstOfMonth.format('MMM Do')}`;
     }
 }

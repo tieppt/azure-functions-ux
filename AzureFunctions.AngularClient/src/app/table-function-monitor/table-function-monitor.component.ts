@@ -94,7 +94,7 @@ export class TableFunctionMonitorComponent extends FeatureComponent<FunctionMoni
             });
     }
 
-    showDetails(rowData: FunctionInvocations) {
+    public showDetails(rowData: FunctionInvocations) {
         this._functionMonitorService
             .getInvocationDetailsForSelectedInvocation(this._functionMonitorInfo.functionAppContext, rowData.id)
             .subscribe(invocationDetails => {
@@ -108,46 +108,32 @@ export class TableFunctionMonitorComponent extends FeatureComponent<FunctionMoni
             });
     }
 
-    setOutputLogInfo(rowId: string) {
+    public setOutputLogInfo(rowId: string) {
         this._functionMonitorService.getOutputDetailsForSelectedInvocation(this._functionMonitorInfo.functionAppContext, rowId)
             .subscribe(outputData => {
                 this.outputLog = outputData;
             });
     }
 
-    refreshFuncMonitorGridData() {
-        this.setBusyState();
-        this._functionMonitorService.getInvocationsDataForSelectedFunction(this._functionMonitorInfo.functionAppContext, this.selectedFunctionId)
-            .subscribe(result => {
-                this.data = result;
-                this.clearBusyState();
-            });
-    }
-
-    setBusyState() {
+    public setBusyState() {
         if (this.busyState) {
             this.busyState.setBusyState();
         }
     }
 
-    clearBusyState() {
+    public clearBusyState() {
         if (this.busyState) {
             this.busyState.clearBusyState();
         }
     }
 
-    liveStreamClicked() {
-    }
-
-    onKeyPressRefresh(event: KeyboardEvent) {
-        if (event.keyCode === KeyCodes.enter) {
-            this.refreshFuncMonitorGridData();
-        }
-    }
-
-    onKeyPressLogDetails(event: KeyboardEvent, rowData: FunctionInvocations) {
+    public onKeyPressLogDetails(event: KeyboardEvent, rowData: FunctionInvocations) {
         if (event.keyCode === KeyCodes.enter) {
             this.showDetails(rowData);
         }
+    }
+
+    public refresh() {
+        this.setInput(this._functionMonitorInfo);
     }
 }

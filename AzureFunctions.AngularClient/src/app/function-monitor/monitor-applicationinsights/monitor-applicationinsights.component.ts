@@ -1,7 +1,7 @@
 import { Component, Input, Injector } from '@angular/core';
 import { ComponentNames } from '../../shared/models/constants';
 import { FeatureComponent } from '../../shared/components/feature-component';
-import { FunctionMonitorInfo } from '../../shared/models/function-monitor';
+import { FunctionMonitorInfo, MonitorDetailsInfo } from '../../shared/models/function-monitor';
 import { Observable } from 'rxjs/Observable';
 import { ApplicationInsightsService } from '../../shared/services/application-insights.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -19,11 +19,13 @@ declare const moment: any;
 export class MonitorApplicationInsightsComponent extends FeatureComponent<FunctionMonitorInfo> {
 
   @Input() set functionMonitorInfoInput(functionMonitorInfo: FunctionMonitorInfo) {
-    this.setBusy();
     this.isLoading = true;
     this.successCount = this._translateService.instant(PortalResources.loading);
     this.errorsCount = this._translateService.instant(PortalResources.loading);
     this.applicationInsightsInstanceName = this._translateService.instant(PortalResources.loading);
+    this.monitorDetailsInfo = null;
+    this.sidePanelOpened = false;
+    this.setBusy();
     this.setInput(functionMonitorInfo);
   }
 
@@ -35,6 +37,8 @@ export class MonitorApplicationInsightsComponent extends FeatureComponent<Functi
   public functionMonitorInfo: FunctionMonitorInfo;
   public invocationTraces: AIInvocationTrace[] = [];
   public isLoading: boolean = true;
+  public monitorDetailsInfo: MonitorDetailsInfo;
+  public sidePanelOpened: boolean = false;
 
   constructor(
     private _translateService: TranslateService,
@@ -50,7 +54,7 @@ export class MonitorApplicationInsightsComponent extends FeatureComponent<Functi
       .switchMap(functionMonitorInfo => Observable.zip(
         Observable.of(functionMonitorInfo),
         this._applicationInsightsService.getCurrentMonthSummary(functionMonitorInfo.applicationInsightsResourceId, functionMonitorInfo.functionInfo.name),
-        this._applicationInsightsService.getInvocationData(functionMonitorInfo.applicationInsightsResourceId, functionMonitorInfo.functionInfo.name)
+        this._applicationInsightsService.getInvocationTraces(functionMonitorInfo.applicationInsightsResourceId, functionMonitorInfo.functionInfo.name)
       ))
       .do(tuple => {
         this.functionMonitorInfo = tuple[0];
@@ -64,6 +68,19 @@ export class MonitorApplicationInsightsComponent extends FeatureComponent<Functi
         this.errorsCount = monthlySummary.failedCount.toString();
         this.isLoading = false;
       });
+  }
+
+  public showTraceDetail(trace: AIInvocationTrace): void {
+    this.sidePanelOpened = true;
+    this.monitorDetailsInfo = {
+      functionMonitorInfo: this.functionMonitorInfo,
+      operationId: trace.operationId,
+      id: trace.id
+    }
+  }
+
+  public closeSidePanel() {
+      this.sidePanelOpened = false;
   }
 
   private _setHeaders(): void {

@@ -48,6 +48,7 @@ import { BindingV2Component } from './function/binding-v2/binding-v2.component';
 import { BindingInputV2Component } from './function/binding-input-v2/binding-input-v2.component';
 import { ExtensionCheckerComponent } from './function/extension-checker/extension-checker.component'
 import { ErrorsWarningsComponent } from './errors-warnings/errors-warnings.component';
+import { MonitorDetailsComponent } from './function-monitor/monitor-details/monitor-details.component';
 
 const routing: ModuleWithProviders = RouterModule.forChild([
     {
@@ -127,6 +128,7 @@ const routing: ModuleWithProviders = RouterModule.forChild([
         FunctionMonitorComponent,
         MonitorClassicComponent,
         MonitorApplicationInsightsComponent,
+        MonitorDetailsComponent,
         AggregateBlockComponent,
         AggregateBlockPipe,
         TableFunctionMonitorComponent,

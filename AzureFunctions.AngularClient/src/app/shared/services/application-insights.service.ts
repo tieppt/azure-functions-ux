@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Response } from '@angular/http';
 import { ArmService } from './arm.service';
-import { AIMonthlySummary, AIInvocationTrace } from '../models/application-insights';
+import { AIMonthlySummary, AIInvocationTrace, AIInvocationTraceDetail } from '../models/application-insights';
 import { Observable } from 'rxjs/Observable';
 
 @Injectable()
@@ -31,7 +31,7 @@ export class ApplicationInsightsService {
       .map(response => this._extractSummaryFromResponse(response));
   }
 
-  public getInvocationData(aiResourceId: string, functionName: string, top: number = 20): Observable<AIInvocationTrace[]> {
+  public getInvocationTraces(aiResourceId: string, functionName: string, top: number = 20): Observable<AIInvocationTrace[]> {
     this._validateAiResourceid(aiResourceId);
     this._validateFunctionName(functionName);
 
@@ -43,7 +43,29 @@ export class ApplicationInsightsService {
 
     return this._armService
       .post(resourceId, body, this._apiVersion)
-      .map(response => this._extractInvocationDataFromResponse(response));
+      .map(response => this._extractInvocationTracesFromResponse(response));
+  }
+
+  public getInvocationTraceDetail(aiResourceId: string, functionName: string, operationId: string): Observable<AIInvocationTraceDetail> {
+    this._validateAiResourceid(aiResourceId);
+    this._validateFunctionName(functionName);
+    this._validateOperationId(functionName);
+
+    const resourceId = `${aiResourceId}/api/query`;
+
+    const query = `requests ` +
+    `| project timestamp, id, name, success, resultCode, duration, operation_Id, url, performanceBucket, customDimensions, operation_Name, operation_ParentId ` +
+    `| where name == '${functionName}' ` +
+    `| where operation_Id == '${operationId}' `+
+    `| join kind= leftouter (exceptions | project innermostMessage, innermostMethod , operation_Id) on operation_Id `;
+
+    const body = {
+      'query': query
+    };
+
+    return this._armService
+      .post(resourceId, body, this._apiVersion)
+      .map(response => this._extractInvocationTraceDetailFromResponse(response));
   }
 
   private _validateAiResourceid(aiResourceId: string): void {
@@ -55,6 +77,12 @@ export class ApplicationInsightsService {
   private _validateFunctionName(functionName: string): void {
     if (!functionName) {
       throw "functionName is required.";
+    }
+  }
+
+  private _validateOperationId(operationId: string): void {
+    if (!operationId) {
+      throw "operationId is required.";
     }
   }
 
@@ -81,7 +109,7 @@ export class ApplicationInsightsService {
     return summary;
   }
 
-  private _extractInvocationDataFromResponse(response: Response): AIInvocationTrace[] {
+  private _extractInvocationTracesFromResponse(response: Response): AIInvocationTrace[] {
     var traces: AIInvocationTrace[] = [];
 
     if (response.ok) {
@@ -102,6 +130,35 @@ export class ApplicationInsightsService {
     }
 
     return traces;
+  }
+
+  private _extractInvocationTraceDetailFromResponse(response: Response): AIInvocationTraceDetail {
+    var detail: AIInvocationTraceDetail;
+
+    if (response.ok) {
+      var summaryTable = response.json().Tables[0];
+      if (summaryTable && summaryTable.Rows.length == 1) {
+        var row = summaryTable.Rows[0];
+        detail = {
+          timestamp: row[0],
+          id: row[1],
+          name: row[2],
+          success: row[3],
+          resultCode: row[4],
+          duration: Number.parseFloat(row[5]),
+          operationId: row[6],
+          url: row[7],
+          performanceBucket: row[8],
+          customDimensions: JSON.parse(row[9]),
+          operationName: row[10],
+          operationParentId: row[11],
+          innerMostMessage: row[12],
+          innerMostMethod: row[13]
+        }
+      }
+    }
+
+    return detail;
   }
 
 }

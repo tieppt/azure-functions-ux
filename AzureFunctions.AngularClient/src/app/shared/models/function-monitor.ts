@@ -49,3 +49,9 @@ export interface FunctionMonitorInfo {
     functionInfo: FunctionInfo;
     applicationInsightsResourceId: string;
 }
+
+export interface MonitorDetailsInfo {
+    functionMonitorInfo: FunctionMonitorInfo;
+    operationId: string;
+    id: string;
+}

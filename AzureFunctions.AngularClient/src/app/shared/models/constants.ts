@@ -357,4 +357,5 @@ export class ComponentNames {
     public static monitorClassic = 'monitor-classic';
     public static monitorApplicationInsights = 'monitor-applicationinsights';
     public static tableFunctionMonitor = 'table-function-monitor';
+    public static monitorDetails = 'monitor-details';
 }

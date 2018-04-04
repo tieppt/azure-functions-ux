@@ -3,11 +3,13 @@ import { Response } from '@angular/http';
 import { ArmService } from './arm.service';
 import { AIMonthlySummary, AIInvocationTrace, AIInvocationTraceDetail } from '../models/application-insights';
 import { Observable } from 'rxjs/Observable';
+import { ApplicationInsightsUtil } from '../Utilities/application-insights-util';
 
 @Injectable()
 export class ApplicationInsightsService {
 
-  private readonly _apiVersion: string = "2014-12-01-preview";
+  private readonly _apiVersion: string = "2015-05-01";
+  private readonly _directUrl: string = "https://analytics.applicationinsights.io/";
 
   constructor(
     private _armService: ArmService
@@ -15,15 +17,10 @@ export class ApplicationInsightsService {
 
   public getCurrentMonthSummary(aiResourceId: string, functionName: string): Observable<AIMonthlySummary> {
     this._validateAiResourceid(aiResourceId);
-    this._validateFunctionName(functionName);
-
-    var today = new Date();
-    var startDate = `${today.getFullYear()}-${today.getMonth() + 1}-1`;
 
     const resourceId = `${aiResourceId}/api/query`;
-    const query = `requests | where timestamp >= datetime('${startDate}') | where name == '${functionName}' | summarize count=count() by success`;
     const body = {
-      'query': query
+      'query': this._getQueryForCurrentMonthSummary(functionName)
     };
 
     return this._armService
@@ -33,12 +30,10 @@ export class ApplicationInsightsService {
 
   public getInvocationTraces(aiResourceId: string, functionName: string, top: number = 20): Observable<AIInvocationTrace[]> {
     this._validateAiResourceid(aiResourceId);
-    this._validateFunctionName(functionName);
 
     const resourceId = `${aiResourceId}/api/query`;
-    const query = `requests | project timestamp, id, name, success, resultCode, duration, operation_Id | where name == '${functionName}' | order by timestamp desc | take ${top}`;
     const body = {
-      'query': query
+      'query': this._getQueryForInvocationTraces(functionName, top)
     };
 
     return this._armService
@@ -48,24 +43,54 @@ export class ApplicationInsightsService {
 
   public getInvocationTraceDetail(aiResourceId: string, functionName: string, operationId: string): Observable<AIInvocationTraceDetail> {
     this._validateAiResourceid(aiResourceId);
-    this._validateFunctionName(functionName);
-    this._validateOperationId(functionName);
 
     const resourceId = `${aiResourceId}/api/query`;
-
-    const query = `requests ` +
-    `| project timestamp, id, name, success, resultCode, duration, operation_Id, url, performanceBucket, customDimensions, operation_Name, operation_ParentId ` +
-    `| where name == '${functionName}' ` +
-    `| where operation_Id == '${operationId}' `+
-    `| join kind= leftouter (exceptions | project innermostMessage, innermostMethod , operation_Id) on operation_Id `;
-
     const body = {
-      'query': query
+      'query': this._getQueryForInvocationTraceDetail(functionName, operationId)
     };
 
     return this._armService
       .post(resourceId, body, this._apiVersion)
       .map(response => this._extractInvocationTraceDetailFromResponse(response));
+  }
+
+  public getInvocationTracesDirectUrl(aiResourceId: string, functionName: string, top: number = 20): string {
+    const baseUrl = this._directUrl + this._getDirectUrlResourceId(aiResourceId) + '?q=';
+    const query = ApplicationInsightsUtil.compressAndEncodeBase64AndUri(this._getQueryForInvocationTraces(functionName, top));
+
+    return baseUrl + query;
+  }
+
+  private _getDirectUrlResourceId(aiResourceId: string): string {
+    // NOTE(michinoy): The aiResourceId is /subscriptions/<sub>/resourceGroups/<rg>/providers/microsoft.insights/components/<name>
+    // to call the app insights instance directly we need /subscriptions/<sub>/resourceGroups/<rg>/components/<name>
+    const resourceIdParts = aiResourceId.split('/');
+    return `subscriptions/${resourceIdParts[2]}/resourceGroups/${resourceIdParts[4]}/components/${resourceIdParts[8]}`;
+  }
+
+  private _getQueryForCurrentMonthSummary(functionName: string): string {
+    this._validateFunctionName(functionName);
+
+    const today = new Date();
+    const startDate = `${today.getFullYear()}-${today.getMonth() + 1}-1`;
+    return `requests | where timestamp >= datetime('${startDate}') | where name == '${functionName}' | summarize count=count() by success`;
+  }
+
+  private _getQueryForInvocationTraces(functionName: string, top: number = 20): string {
+    this._validateFunctionName(functionName);
+
+    return `requests | project timestamp, id, name, success, resultCode, duration, operation_Id | where name == '${functionName}' | order by timestamp desc | take ${top}`;
+  }
+
+  private _getQueryForInvocationTraceDetail(functionName: string, operationId: string) {
+    this._validateFunctionName(functionName);
+    this._validateOperationId(operationId);
+
+    return `requests ` +
+    `| project timestamp, id, name, success, resultCode, duration, operation_Id, url, performanceBucket, customDimensions, operation_Name, operation_ParentId ` +
+    `| where name == '${functionName}' ` +
+    `| where operation_Id == '${operationId}' `+
+    `| join kind= leftouter (exceptions | project innermostMessage, innermostMethod , operation_Id) on operation_Id `;
   }
 
   private _validateAiResourceid(aiResourceId: string): void {

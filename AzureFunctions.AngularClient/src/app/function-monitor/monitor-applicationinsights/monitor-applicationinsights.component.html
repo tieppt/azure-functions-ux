@@ -2,9 +2,11 @@
   <div ng-sidebar-content>
     <command-bar>
       <command displayText="{{ 'refresh' | translate }}"
+        (click)="refresh()"
         iconUrl="image/reset.svg"></command>
 
-      <command displayText="{{ 'refresh' | translate }}"
+      <command displayText="Open in Application Insights"
+        (click)="openAppInsightsQueryEditor()"
         iconUrl="image/open-external.svg"></command>
     </command-bar>
 
@@ -15,7 +17,7 @@
           <div tabindex="0"
                 id="applicationInsightsInstanceValue"
                 aria-labelledby="applicationInsightsInstanceLabel applicationInsightsInstanceValue">
-                {{applicationInsightsInstanceName}}
+                <a class="link" (click)="openInAppInsights()" tabindex="0">{{applicationInsightsInstanceName}}</a>
           </div>
         </div>
       </div>

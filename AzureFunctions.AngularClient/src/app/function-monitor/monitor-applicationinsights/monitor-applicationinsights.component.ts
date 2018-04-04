@@ -7,6 +7,7 @@ import { ApplicationInsightsService } from '../../shared/services/application-in
 import { TranslateService } from '@ngx-translate/core';
 import { PortalResources } from '../../shared/models/portal-resources';
 import { AIInvocationTrace } from '../../shared/models/application-insights';
+import { PortalService } from '../../shared/services/portal.service';
 
 declare const moment: any;
 
@@ -41,6 +42,7 @@ export class MonitorApplicationInsightsComponent extends FeatureComponent<Functi
   public sidePanelOpened: boolean = false;
 
   constructor(
+    private _portalService: PortalService,
     private _translateService: TranslateService,
     private _applicationInsightsService: ApplicationInsightsService,
     injector: Injector) {
@@ -81,6 +83,31 @@ export class MonitorApplicationInsightsComponent extends FeatureComponent<Functi
 
   public closeSidePanel() {
       this.sidePanelOpened = false;
+  }
+
+  public refresh() {
+    this.sidePanelOpened = false;
+    this.setInput(this.functionMonitorInfo);
+  }
+
+  public openInAppInsights() {
+    this._portalService.openBlade(
+      {
+          detailBlade: 'AspNetOverview',
+          detailBladeInputs: {
+              id: this.functionMonitorInfo.applicationInsightsResourceId
+          },
+          extension: 'AppInsightsExtension'
+      },
+      ComponentNames.functionMonitor);
+  }
+
+  public openAppInsightsQueryEditor() {
+    var url = this._applicationInsightsService.getInvocationTracesDirectUrl(
+      this.functionMonitorInfo.applicationInsightsResourceId,
+      this.functionMonitorInfo.functionInfo.name);
+
+    window.open(url, '_blank');
   }
 
   private _setHeaders(): void {

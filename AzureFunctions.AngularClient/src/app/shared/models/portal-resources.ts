@@ -650,9 +650,6 @@
     public static keysDialog_getFunctionUrl: string = "keysDialog_getFunctionUrl";
     public static keysDialog_key: string = "keysDialog_key";
     public static keysDialog_url: string = "keysDialog_url";
-    public static keysDialog_domain: string = "keysDialog_domain";
-    public static keysDialog_warning: string = "keysDialog_warning";
-    public static keysDialog_noHttps: string = "keysDialog_noHttps";
     public static downloadFunctionAppContent: string = "downloadFunctionAppContent";
     public static functionKeys_renewConfirmation: string = "functionKeys_renewConfirmation";
     public static emptyBrowse: string = "emptyBrowse";
@@ -952,4 +949,14 @@
     public static diagnostics_line: string = "diagnostics_line";
     public static proxyJsonInvalid: string = "proxyJsonInvalid";
     public static schemaJsonInvalid: string = "schemaJsonInvalid";
+    public static operationId: string = "operationId";
+    public static date: string = "date";
+    public static url: string = "url";
+    public static resultCode: string = "resultCode";
+    public static triggerReason: string = "triggerReason";
+    public static error: string = "error";
+    public static runInAppInsights: string = "runInAppInsights";
+    public static appInsightsInstance: string = "appInsightsInstance";
+    public static success: string = "success";
+    public static duration: string = "duration";
 }

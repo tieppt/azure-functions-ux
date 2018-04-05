@@ -5,7 +5,7 @@
         (click)="refresh()"
         iconUrl="image/reset.svg"></command>
 
-      <command displayText="Open in Application Insights"
+      <command displayText="{{ 'runInAppInsights' | translate }}"
         (click)="openAppInsightsQueryEditor()"
         iconUrl="image/open-external.svg"></command>
     </command-bar>
@@ -13,7 +13,7 @@
     <div id="essentials-container">
       <div class="essentials-col">
         <div>
-          <label id="applicationInsightsInstanceLabel">Application Insights Instance</label>
+          <label id="applicationInsightsInstanceLabel">{{ 'appInsightsInstance' | translate }}</label>
           <div tabindex="0"
                 id="applicationInsightsInstanceValue"
                 aria-labelledby="applicationInsightsInstanceLabel applicationInsightsInstanceValue">
@@ -50,11 +50,11 @@
     <div class="function-monitor-content">
         <tbl [items]="invocationTraces" #table="tbl">
             <tr>
-              <th><tbl-th name="timestamp">{{ 'timestamp'.toUpperCase() }}</tbl-th></th>
-              <th><tbl-th name="success">{{ 'success'.toUpperCase() }}</tbl-th></th>
-              <th><tbl-th name="resultCode">{{ 'result code'.toUpperCase() }}</tbl-th></th>
-              <th><tbl-th name="duration">{{ 'duration'.toUpperCase() }}</tbl-th></th>
-              <th><tbl-th name="id">{{ 'id'.toUpperCase() }}</tbl-th></th>
+              <th><tbl-th name="timestamp">{{ ('date' | translate).toUpperCase() }}</tbl-th></th>
+              <th><tbl-th name="success">{{ ('success' | translate).toUpperCase() }}</tbl-th></th>
+              <th><tbl-th name="resultCode">{{ ('resultCode' | translate).toUpperCase() }}</tbl-th></th>
+              <th><tbl-th name="duration">{{ ('duration' | translate).toUpperCase() }}</tbl-th></th>
+              <th><tbl-th name="id">{{ ('operationId' | translate).toUpperCase() }}</tbl-th></th>
             </tr>
         
             <tr *ngFor="let trace of invocationTraces">
@@ -62,7 +62,7 @@
               <td>{{trace.success}}</td>
               <td>{{trace.resultCode}}</td>
               <td>{{trace.duration}}</td>
-              <td>{{trace.id}}</td>
+              <td>{{trace.operationId}}</td>
             </tr>
         
             <tr *ngIf="invocationTraces.length === 0">

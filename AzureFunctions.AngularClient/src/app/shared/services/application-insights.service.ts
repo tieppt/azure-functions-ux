@@ -1,19 +1,27 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { Response } from '@angular/http';
 import { ArmService } from './arm.service';
 import { AIMonthlySummary, AIInvocationTrace, AIInvocationTraceDetail } from '../models/application-insights';
 import { Observable } from 'rxjs/Observable';
 import { ApplicationInsightsUtil } from '../Utilities/application-insights-util';
+import { ConditionalHttpClient } from '../conditional-http-client';
+import { UserService } from './user.service';
+import { HttpResult } from './../models/http-result';
 
 @Injectable()
 export class ApplicationInsightsService {
+  private readonly _client: ConditionalHttpClient;
 
   private readonly _apiVersion: string = "2015-05-01";
   private readonly _directUrl: string = "https://analytics.applicationinsights.io/";
 
   constructor(
-    private _armService: ArmService
-  ) { }
+    private _armService: ArmService,
+    userService: UserService,
+    injector: Injector
+  ) {
+    this._client = new ConditionalHttpClient(injector, _ => userService.getStartupInfo().map(i => i.token));
+  }
 
   public getCurrentMonthSummary(aiResourceId: string, functionName: string): Observable<AIMonthlySummary> {
     this._validateAiResourceid(aiResourceId);
@@ -23,8 +31,10 @@ export class ApplicationInsightsService {
       'query': this._getQueryForCurrentMonthSummary(functionName)
     };
 
-    return this._armService
-      .post(resourceId, body, this._apiVersion)
+    const response = this._armService.post(resourceId, body, this._apiVersion);
+
+    return this._client
+      .execute({ resourceId: aiResourceId}, t => response)
       .map(response => this._extractSummaryFromResponse(response));
   }
 
@@ -36,8 +46,10 @@ export class ApplicationInsightsService {
       'query': this._getQueryForInvocationTraces(functionName, top)
     };
 
-    return this._armService
-      .post(resourceId, body, this._apiVersion)
+    const response = this._armService.post(resourceId, body, this._apiVersion);
+
+    return this._client
+      .execute({resourceId: aiResourceId}, t => response)
       .map(response => this._extractInvocationTracesFromResponse(response));
   }
 
@@ -49,8 +61,10 @@ export class ApplicationInsightsService {
       'query': this._getQueryForInvocationTraceDetail(functionName, operationId)
     };
 
-    return this._armService
-      .post(resourceId, body, this._apiVersion)
+    const response = this._armService.post(resourceId, body, this._apiVersion);
+
+    return this._client
+      .execute({resourceId: aiResourceId}, t => response)
       .map(response => this._extractInvocationTraceDetailFromResponse(response));
   }
 
@@ -111,14 +125,14 @@ export class ApplicationInsightsService {
     }
   }
 
-  private _extractSummaryFromResponse(response: Response): AIMonthlySummary {
+  private _extractSummaryFromResponse(response: HttpResult<Response>): AIMonthlySummary {
     var summary: AIMonthlySummary = {
       successCount: 0,
       failedCount: 0
     };
 
-    if (response.ok) {
-      var summaryTable = response.json().Tables[0];
+    if (response.isSuccessful) {
+      var summaryTable = response.result.json().Tables[0];
       var rows = summaryTable.Rows;
       if (rows.length <= 2) {
         rows.forEach(element => {
@@ -134,11 +148,11 @@ export class ApplicationInsightsService {
     return summary;
   }
 
-  private _extractInvocationTracesFromResponse(response: Response): AIInvocationTrace[] {
+  private _extractInvocationTracesFromResponse(response: HttpResult<Response>): AIInvocationTrace[] {
     var traces: AIInvocationTrace[] = [];
 
-    if (response.ok) {
-      var summaryTable = response.json().Tables[0];
+    if (response.isSuccessful) {
+      var summaryTable = response.result.json().Tables[0];
       if (summaryTable && summaryTable.Rows.length > 0) {
         summaryTable.Rows.forEach(row => {
           traces.push({
@@ -157,11 +171,11 @@ export class ApplicationInsightsService {
     return traces;
   }
 
-  private _extractInvocationTraceDetailFromResponse(response: Response): AIInvocationTraceDetail {
+  private _extractInvocationTraceDetailFromResponse(response: HttpResult<Response>): AIInvocationTraceDetail {
     var detail: AIInvocationTraceDetail;
 
-    if (response.ok) {
-      var summaryTable = response.json().Tables[0];
+    if (response.isSuccessful) {
+      var summaryTable = response.result.json().Tables[0];
       if (summaryTable && summaryTable.Rows.length == 1) {
         var row = summaryTable.Rows[0];
         detail = {

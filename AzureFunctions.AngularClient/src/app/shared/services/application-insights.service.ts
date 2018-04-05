@@ -93,7 +93,7 @@ export class ApplicationInsightsService {
   private _getQueryForInvocationTraces(functionName: string, top: number = 20): string {
     this._validateFunctionName(functionName);
 
-    return `requests | project timestamp, id, name, success, resultCode, duration, operation_Id | where name == '${functionName}' | order by timestamp desc | take ${top}`;
+    return `requests | project timestamp, id, name, success, resultCode, duration, operation_Id | where timestamp > ago(7d) | where name == '${functionName}' | order by timestamp desc | take ${top}`;
   }
 
   private _getQueryForInvocationTraceDetail(functionName: string, operationId: string) {
@@ -104,6 +104,7 @@ export class ApplicationInsightsService {
     `| project timestamp, id, name, success, resultCode, duration, operation_Id, url, performanceBucket, customDimensions, operation_Name, operation_ParentId ` +
     `| where name == '${functionName}' ` +
     `| where operation_Id == '${operationId}' `+
+    `| where timestamp > ago(7d) ` +
     `| join kind= leftouter (exceptions | project innermostMessage, innermostMethod , operation_Id) on operation_Id `;
   }
 

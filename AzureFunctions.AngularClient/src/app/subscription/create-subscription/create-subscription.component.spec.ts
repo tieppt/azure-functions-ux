@@ -7,18 +7,18 @@ describe('CreateAppComponent', () => {
   let component: CreateSubscriptionComponent;
   let fixture: ComponentFixture<CreateSubscriptionComponent>;
 
-  // beforeEach(async(() => {
-  //   TestBed.configureTestingModule(AppModule.moduleDefinition)
-  //   .compileComponents();
-  // }));
+  beforeEach(async(() => {
+    TestBed.configureTestingModule(AppModule.moduleDefinition)
+      .compileComponents();
+  }));
 
-  // beforeEach(() => {
-  //   fixture = TestBed.createComponent(CreateAppComponent);
-  //   component = fixture.componentInstance;
-  //   fixture.detectChanges();
-  // });
+  beforeEach(() => {
+    fixture = TestBed.createComponent(CreateSubscriptionComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-  // it('should create', () => {
-  //   expect(component).toBeTruthy();
-  // });
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 });

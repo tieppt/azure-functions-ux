@@ -1,5 +1,3 @@
-import { FunctionInfo } from './../shared/models/function-info';
-import { Subject } from 'rxjs/Subject';
 import { AppModule } from './../app.module';
 import { AiService } from './../shared/services/ai.service';
 import { UtilitiesService } from './../shared/services/utilities.service';
@@ -7,9 +5,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { BroadcastService } from './../shared/services/broadcast.service';
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { DebugElement } from '@angular/core';
+
 
 import { FunctionKeysComponent } from './function-keys.component';
+import { DebugElement } from '@angular/core';
 
 describe('FunctionKeysComponent', () => {
   let component: FunctionKeysComponent;
@@ -45,19 +44,6 @@ describe('FunctionKeysComponent', () => {
     expect(component.keys).toBeTruthy();
     expect(component['functionStream']).toBeTruthy();
     expect(component['functionAppStream']).toBeTruthy();
-  });
-
-  it('should handle new FunctionInfo getting pushed to it', () => {
-    let functionAppStream: Subject<FunctionApp> = component['functionAppStream'];
-    let functionStream: Subject<FunctionInfo> = component['functionStream'];
-    let functionApp: any = {
-      getFunctionKeys: () => undefined
-    };
-
-    functionAppStream.next(functionApp);
-    functionStream.next(<any>{
-      functionApp: functionApp
-    });
   });
 
 });

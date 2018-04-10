@@ -2,14 +2,14 @@ import { AppModule } from './../../app.module';
 /* tslint:disable:no-unused-variable */
 
 import { TestBed, inject } from '@angular/core/testing';
-import { BackgroundTasksService } from './background-tasks.service';
+import { ArmEmbeddedService } from './arm-embedded.service';
 
-describe('Service: BackgroundTasks', () => {
+describe('Service: Arm', () => {
   beforeEach(() => {
     TestBed.configureTestingModule(AppModule.moduleDefinition);
   });
 
-  it('should ...', inject([BackgroundTasksService], (service: BackgroundTasksService) => {
+  it('should ...', inject([ArmEmbeddedService], (service: ArmEmbeddedService) => {
     expect(service).toBeTruthy();
   }));
 });

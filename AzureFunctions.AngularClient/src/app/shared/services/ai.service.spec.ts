@@ -1,15 +1,10 @@
 import { AppModule } from './../../app.module';
 /* tslint:disable:no-unused-variable */
 
-import { TestBed, async, inject } from '@angular/core/testing';
-import { AiService } from './ai.service';
+import { TestBed } from '@angular/core/testing';
 
 describe('Service: Ai', () => {
   beforeEach(() => {
     TestBed.configureTestingModule(AppModule.moduleDefinition);
   });
-
-  // it('should ...', inject([AiService], (service: AiService) => {
-  //   expect(service).toBeTruthy();
-  // }));
 });

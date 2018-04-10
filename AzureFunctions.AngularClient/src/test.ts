@@ -23,9 +23,10 @@ declare var require: any;
 window.appsvc = {
   env: {
     hostName: '',
-    runtimeType: '',
+    runtimeType: 'Azure',
     azureResourceManagerEndpoint: ''
-  }
+  },
+  cacheBreakQuery: 'test'
 };
 
 // Prevent Karma from running prematurely.

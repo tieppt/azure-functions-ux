@@ -9,7 +9,7 @@ interface Environment {
 
 interface AppSvc {
   env: Environment;
-  functionsVersionInfo: FunctionsVersionInfo;
+  functionsVersionInfo?: FunctionsVersionInfo;
   cdn?: string;
   cacheBreakQuery: string;
 }

@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CardInfoControlComponent } from './card-info-control.component';
+import { TranslatePipeMock } from 'mock-services/translate-pipe';
+
 
 describe('CardInfoControlComponent', () => {
   let component: CardInfoControlComponent;
@@ -8,9 +10,9 @@ describe('CardInfoControlComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CardInfoControlComponent ]
+      declarations: [CardInfoControlComponent, TranslatePipeMock]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

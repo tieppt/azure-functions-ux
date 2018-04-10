@@ -29,6 +29,7 @@ import 'rxjs/add/operator/takeUntil';
 import 'rxjs/add/observable/timer';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/zip';
+import { APP_BASE_HREF } from '@angular/common';
 
 // Prevents a route from loading until the observable has been resolved
 @Injectable()
@@ -96,7 +97,9 @@ export class AppModule {
             PopoverModule,
             routes
         ],
-        providers: [InitResolver],
+        providers: [
+            InitResolver,
+            { provide: APP_BASE_HREF, useValue: '/' }],
         bootstrap: [AppComponent]
     };
 }

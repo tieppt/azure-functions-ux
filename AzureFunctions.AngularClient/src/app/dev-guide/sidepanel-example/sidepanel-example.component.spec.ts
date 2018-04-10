@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SidepanelExampleComponent } from './sidepanel-example.component';
+import { SidebarModule } from 'ng-sidebar';
+import { HighlightService } from '../highlight.service';
 
 describe('SidepanelExampleComponent', () => {
   let component: SidepanelExampleComponent;
@@ -8,9 +10,11 @@ describe('SidepanelExampleComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SidepanelExampleComponent ]
+      imports: [SidebarModule],
+      providers: [HighlightService],
+      declarations: [SidepanelExampleComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
